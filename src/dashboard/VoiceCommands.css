@@ -1,0 +1,42 @@
+.bg-commands {
+    position: fixed;
+    display: flex;
+    background: #043934;
+    z-index: 6;
+    border-radius: 13px;
+    box-shadow: 3px 4px 6.9px 0 rgba(0, 0, 0, 0.25);
+}
+
+.list {
+    display: flex;
+    font-size: 0px;
+    z-index: 29;
+    border-radius: 4px;
+    background: #043934;
+}
+
+.title-dog-commands {
+    width: 233px;
+    height: 46px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    background: url(../../public/images/3c48fdb1-e3d0-4c25-aca0-bbf91c0aedbb.png) no-repeat center;
+    background-size: cover;
+    z-index: 22;
+}
+
+/* done */
+.dog-commands {
+    display: flex;
+    position: fixed;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei", "Source Han Sans CN", sans-serif;
+    color: #ffffff;
+    text-transform: "none";
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 22.994px;
+    text-align: right;
+    white-space: nowrap;
+    z-index: 28;
+}
