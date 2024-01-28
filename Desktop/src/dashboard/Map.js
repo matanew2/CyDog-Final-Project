@@ -1,33 +1,62 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-// import socket.io from "socket.io";
 
-const MapComponent = ({ latitude, longitude }) => {
+const MapComponent = ({ location }) => {
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const polylineRef = useRef(null);
+  const locationsRef = useRef([]);
+
   useEffect(() => {
-    // Creating map options
-
     const mapOptions = {
-      center: [latitude, longitude],
+      center: [location.latitude, location.longitude],
       zoom: 10,
     };
 
-    // Creating a map object
-    const map = L.map("map", mapOptions);
+    mapRef.current = L.map("map", mapOptions);
 
-    // Creating a Layer object
     const layer = L.tileLayer(
       "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     );
 
-    // Adding layer to the map
-    map.addLayer(layer);
+    mapRef.current.addLayer(layer);
 
-    // Clean up function to remove the map when the component is unmounted
+    var myIcon = L.icon({
+      iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // URL to your icon image
+      iconSize: [25, 41],
+    });
+
+    markerRef.current = L.marker([location.latitude, location.longitude], {
+      icon: myIcon,
+    }).addTo(mapRef.current);
+
+    // Initialize polyline
+    polylineRef.current = L.polyline([], { color: "green", weight: 10 }).addTo(
+      mapRef.current
+    );
+
     return () => {
-      map.remove();
+      mapRef.current.remove();
     };
-  }, []); // Empty dependency array ensures that this effect runs once after the initial render
+  }, []); // This effect runs once after the initial render
+
+  useEffect(() => {
+    if (
+      markerRef.current &&
+      !(location.latitude === 0 && location.longitude === 0)
+    ) {
+      markerRef.current.setLatLng([location.latitude, location.longitude]);
+      mapRef.current.setView([location.latitude, location.longitude], 16); // Adjust the zoom level here
+
+      // Add new location to locations array
+      locationsRef.current.push([location.latitude, location.longitude]);
+
+      // Redraw polyline with new locations
+      polylineRef.current.setLatLngs(locationsRef.current);
+    }
+  }, [location]); // This effect runs whenever location changes
 
   return (
     <div

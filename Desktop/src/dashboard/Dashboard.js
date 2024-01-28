@@ -1,5 +1,4 @@
 import * as React from "react";
-import io from "socket.io-client";
 import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -15,6 +14,9 @@ import VoiceCommands from "./VoiceCommands";
 import Camera from "./Camera";
 import DogCard from "./DogCard";
 import "./Dashboard.css";
+import io from "socket.io-client";
+
+const socket = io.connect("http://10.0.0.10:8000");
 
 const drawerWidth = 268;
 
@@ -55,25 +57,11 @@ export default function Dashboard() {
   };
 
   React.useEffect(() => {
-    const socket = io(
-      "https://34bb-2a06-c701-7436-5900-a809-dc39-3aeb-eb6b.ngrok-free.app"
-    ); // Replace with your server URL
-
-    socket.on("connection", (socket) => {
-      socket.on("newLocation", (loc) => {
-        console.log("location", loc);
-        setLocation(loc);
-      });
-      socket.on("error", (error) => {
-        console.error("Socket.IO error", error);
-      });
+    socket.on("newLocation", (data) => {
+      console.log(data);
+      setLocation({ latitude: data.latitude, longitude: data.longitude });
     });
-
-    // Cleanup function to disconnect when the component unmounts
-    return () => {
-      socket.disconnect();
-    };
-  }, []); // Empty dependency array means this effect runs once on mount and cleanup on unmount
+  }, []);
 
   return (
     <Grid container>
@@ -120,10 +108,7 @@ export default function Dashboard() {
                     width: "100%",
                   }}
                 >
-                  <Map
-                    latitude={location.latitude}
-                    longitude={location.longitude}
-                  />
+                  <Map location={location} />
                 </Paper>
                 =
               </Grid>

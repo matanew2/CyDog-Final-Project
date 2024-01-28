@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import socketIOClient from "socket.io-client";
 
-const SocketManager = (baseUrl, callback) => {
+const SocketManager = (socket, callback) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
     // Create a new socket connection when the component mounts
-    socketRef.current = socketIOClient(baseUrl);
+    socketRef.current = socket;
 
     // Listen for the "sound" event from the server
     socketRef.current.on("sound", (data) => {
@@ -17,7 +17,7 @@ const SocketManager = (baseUrl, callback) => {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [baseUrl, callback]);
+  }, [socket, callback]);
 
   return socketRef;
 };
