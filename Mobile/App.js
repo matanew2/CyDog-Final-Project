@@ -1,8 +1,7 @@
 // App.js
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { soundFiles, playSound } from "./components/SoundPlayer";
-import SocketManager from "./components/SocketManager";
+import { playSound } from "./components/SoundPlayer";
 import LocationManager from "./components/LocationManager";
 import io from "socket.io-client";
 
@@ -18,6 +17,20 @@ socket.on("connect_error", (err) => {
 export default function App() {
   const [sound, setSound] = useState(null);
   const [location, setLocation] = useState(null);
+
+  useEffect(() => {
+    const commandListener = (command) => {
+      console.log("Play command:", command);
+      setSound(command);
+      playSound(command);
+    };
+
+    socket.on("command", commandListener);
+
+    return () => {
+      socket.off("command", commandListener);
+    };
+  }, []); // Empty dependency array so this runs only once
 
   const handleLocationChange = (newLocation) => {
     setLocation(newLocation);

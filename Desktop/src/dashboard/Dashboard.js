@@ -115,7 +115,7 @@ export default function Dashboard() {
 
               {/* Voice Commands */}
               <Grid item md={5} lg={7}>
-                <VoiceCommands />
+                <VoiceCommands socket={socket} />
               </Grid>
 
               {/* Dog Card */}

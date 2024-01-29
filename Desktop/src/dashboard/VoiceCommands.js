@@ -35,20 +35,23 @@ function CommandButton({
   );
 }
 
-export default function VoiceCommands() {
+export default function VoiceCommands({ socket }) {
   // eslint-disable-next-line
   const [commands, setCommands] = useState([
-    "run",
-    "jump",
-    "stop",
-    "attack",
+    "bark",
+    "bite",
     "down",
-    "withdraw",
-    "reverse",
+    "jump",
     "sit",
+    "stand",
+    "stay",
   ]);
   const [selectedCommand, setSelectedCommand] = useState(null);
   const [searchedCommand, setSearchedCommand] = useState(null);
+
+  const sendToDog = async () => {
+    socket.emit("command", selectedCommand);
+  };
 
   const searchCommand = (event) => {
     console.log(event.target.value);
@@ -123,6 +126,7 @@ export default function VoiceCommands() {
                   color: "black",
                   filter: "drop-shadow(0 0 5px white)",
                 }}
+                onClick={sendToDog}
               >
                 <Typography variant="subtitle2">Send To Dog</Typography>
               </Button>

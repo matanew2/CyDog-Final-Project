@@ -24,7 +24,12 @@ io.on("connection", (socket) => {
     console.log("User at location:", location.latitude, location.longitude);
     io.emit("newLocation", location); // broadcast to all clients
   });
-  
+
+  socket.on("command", (command) => {
+    console.log(`Received command: ${command}`);
+    io.emit("command", command); // broadcast to all clients
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected with socket id: ${socket.id}`);
   });
