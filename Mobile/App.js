@@ -35,7 +35,10 @@ export default function App() {
           Location: {`${location.latitude}, ${location.longitude}`}
         </Text>
       )}
-      <LocationManager onLocationChange={handleLocationChange} />
+      <LocationManager
+        prevLocation={location}
+        onLocationChange={handleLocationChange}
+      />
     </View>
   );
 }
