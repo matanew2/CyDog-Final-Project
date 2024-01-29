@@ -5,12 +5,7 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import "./VoiceCommands.css";
 
-function CommandButton({
-  command,
-  selectedCommand,
-  searchCommand,
-  handleCommandClick,
-}) {
+function CommandButton({ command, selectedCommand, handleCommandClick }) {
   return (
     <Button
       fullWidth
@@ -26,7 +21,7 @@ function CommandButton({
             ? "rgba(150, 255, 200, 2)"
             : "rgba(255, 255, 255, 0.5)",
         filter: "drop-shadow(0 0 5px white)",
-        margin: searchCommand === command ? "20px" : "10px",
+        margin: "10px",
       }}
       onClick={handleCommandClick}
     >
@@ -47,15 +42,9 @@ export default function VoiceCommands({ socket }) {
     "stay",
   ]);
   const [selectedCommand, setSelectedCommand] = useState(null);
-  const [searchedCommand, setSearchedCommand] = useState(null);
 
   const sendToDog = async () => {
     socket.emit("command", selectedCommand);
-  };
-
-  const searchCommand = (event) => {
-    console.log(event.target.value);
-    setSearchedCommand(event.target.value);
   };
 
   const handleCommandClick = (event) => {
@@ -96,23 +85,15 @@ export default function VoiceCommands({ socket }) {
             alignItems="center"
             justifyContent="center"
           >
-            {commands
-              .filter(
-                (command) =>
-                  searchedCommand === null ||
-                  searchedCommand === "" ||
-                  command.includes(searchedCommand)
-              )
-              .map((command, index) => (
-                <Grid item key={index}>
-                  <CommandButton
-                    command={command}
-                    selectedCommand={selectedCommand}
-                    searchCommand={searchCommand}
-                    handleCommandClick={handleCommandClick}
-                  />
-                </Grid>
-              ))}
+            {commands.map((command, index) => (
+              <Grid item key={index}>
+                <CommandButton
+                  command={command}
+                  selectedCommand={selectedCommand}
+                  handleCommandClick={handleCommandClick}
+                />
+              </Grid>
+            ))}
             <Grid item margin={1}>
               <Button
                 variant="contained"

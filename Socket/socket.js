@@ -33,6 +33,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`User disconnected with socket id: ${socket.id}`);
   });
+  
 });
 
 http.listen(port, () => {

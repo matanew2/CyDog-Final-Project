@@ -35,7 +35,6 @@ export default function App() {
   const handleLocationChange = (newLocation) => {
     setLocation(newLocation);
     console.log("New location:", newLocation);
-
     socket.emit("newLocation", newLocation);
   };
 
