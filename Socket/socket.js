@@ -1,11 +1,10 @@
-// server.js
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
-    origin: "*", // Allow all origins
+    origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["my-custom-header"],
     credentials: true,
@@ -33,9 +32,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`User disconnected with socket id: ${socket.id}`);
   });
-  
 });
 
 http.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Process is running on port ${port}`);
 });
