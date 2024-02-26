@@ -7,8 +7,6 @@ import List from "@mui/material/List";
 import IconButton from "@mui/material/IconButton";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ListItems from "./listItems";
 import Map from "../dashboard/Map";
 import VoiceCommands from "./VoiceCommands";
 import Camera from "./Camera";
@@ -47,14 +45,10 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export default function Dashboard() {
-  const [open, setOpen] = React.useState(true);
   const [location, setLocation] = React.useState({
     latitude: 0.0,
     longitude: 0.0,
   });
-  const toggleDrawer = () => {
-    setOpen(!open);
-  };
 
   React.useEffect(() => {
     socket.on("newLocation", (data) => {
@@ -66,65 +60,38 @@ export default function Dashboard() {
   return (
     <Grid container>
       <Grid item>
-        <Drawer variant="permanent" open={open}>
-          <Toolbar
-            sx={{
-              backgroundColor: "#126D65",
-              px: [1],
-            }}
-          >
-            {open && <Grid item className="logo" />}
-            <IconButton onClick={toggleDrawer}>
-              <ChevronLeftIcon sx={{ color: "white" }} />
-            </IconButton>
-          </Toolbar>
-          <List
-            component="nav"
-            sx={{
-              height: "95vh",
-              backgroundColor: "#126D65",
-            }}
-          >
-            {<ListItems />}
-          </List>
-        </Drawer>
-      </Grid>
-      <Grid item>
-        <Box className="blur-background">
-          {/* <Toolbar /> */}
-          <Grid container maxWidth={open ? "xl" : "xxl"} sx={{ mt: 2, ml: 1 }}>
-            <Grid container spacing={3}>
-              {/* Video */}
-              <Grid item md={5} lg={7} sx={{ height: "75vh" }}>
-                <Camera />
-              </Grid>
+        <Grid container maxWidth={"xl"} sx={{ mt: 2, ml: 30 }}>
+          <Grid container spacing={3}>
+            {/* Video */}
+            <Grid item md={5} lg={7} sx={{ height: "75vh" }}>
+              <Camera />
+            </Grid>
 
-              {/* Map */}
-              <Grid item md={3} lg={4}>
-                <Paper
-                  sx={{
-                    display: "flex",
-                    height: "100%",
-                    width: "100%",
-                  }}
-                >
-                  <Map location={location} />
-                </Paper>
-                =
-              </Grid>
+            {/* Map */}
+            <Grid item md={3} lg={4}>
+              <Paper
+                sx={{
+                  display: "flex",
+                  height: "100%",
+                  width: "100%",
+                }}
+              >
+                <Map location={location} />
+              </Paper>
+    
+            </Grid>
 
-              {/* Voice Commands */}
-              <Grid item md={5} lg={7}>
-                <VoiceCommands socket={socket} />
-              </Grid>
+            {/* Voice Commands */}
+            <Grid item md={5} lg={7}>
+              <VoiceCommands socket={socket} />
+            </Grid>
 
-              {/* Dog Card */}
-              <Grid item md={3} lg={4}>
-                <DogCard dogName={"Marvin"} />
-              </Grid>
+            {/* Dog Card */}
+            <Grid item md={3} lg={4}>
+              <DogCard dogName={"Marvin"} />
             </Grid>
           </Grid>
-        </Box>
+        </Grid>
       </Grid>
     </Grid>
   );

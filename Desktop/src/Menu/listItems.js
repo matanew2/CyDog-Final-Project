@@ -10,7 +10,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import List from "@mui/material/List";
 import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
-import { BrowserRouter as Router, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function ListItems() {
   const [open, setOpen] = useState(false);
@@ -20,7 +20,7 @@ export default function ListItems() {
   };
 
   return (
-    <Router>
+    <List>
       <Link to="/dashboard">
         <ListItemButton>
           <ListItemIcon>
@@ -57,41 +57,14 @@ export default function ListItems() {
           <ListItemText primary="Handlers" sx={{ color: "white" }} />
         </ListItemButton>
       </Link>
-      <ListItemButton onClick={handleClick}>
-        <ListItemIcon>
-          <TasksIcon sx={{ color: "white", fontSize: "30px" }} />
-        </ListItemIcon>
-        <ListItemText primary="Assigment" sx={{ color: "white" }} />
-        {open ? (
-          <ExpandLess sx={{ color: "white" }} />
-        ) : (
-          <ExpandMore sx={{ color: "white" }} />
-        )}
-      </ListItemButton>
-      <Collapse in={open} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <Link to="/tasks">
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemIcon>
-                <ViewListIcon sx={{ color: "white" }} />
-              </ListItemIcon>
-              <ListItemText primary="View All Tasks" sx={{ color: "white" }} />
-            </ListItemButton>
-          </Link>
-        </List>
-      </Collapse>
-      <Collapse in={open} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <Link to="/new-task">
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemIcon>
-                <AddIcon sx={{ color: "white" }} />
-              </ListItemIcon>
-              <ListItemText primary="Add Task" sx={{ color: "white" }} />
-            </ListItemButton>
-          </Link>
-        </List>
-      </Collapse>
-    </Router>
+      <Link to="/tasks">
+        <ListItemButton onClick={handleClick}>
+          <ListItemIcon>
+            <TasksIcon sx={{ color: "white", fontSize: "30px" }} />
+          </ListItemIcon>
+          <ListItemText primary="Assigment" sx={{ color: "white" }} />
+        </ListItemButton>
+      </Link>
+    </List>
   );
 }
