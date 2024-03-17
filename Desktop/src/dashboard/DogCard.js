@@ -1,9 +1,9 @@
 import React from "react";
-import { Grid, Typography } from "@mui/material";
+import { Grid, Typography,Box } from "@mui/material";
 import "./DogCard.css";
 
 const DogInfo = ({ className, children }) => (
-  <Typography sx={{ color: "white", fontSize: "18px" }} className={className}>
+  <Typography sx={{ color: "white", fontSize: "14px" }} className={className}>
     {children}
   </Typography>
 );
@@ -26,7 +26,7 @@ const DogCard = ({ dogName }) => {
           py: "25px",
         }}
       >
-        <Grid item className="dog-pic" />
+        <Box><Grid item className="dog-pic" /></Box>
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
         <DogInfo>{dogName} | Golden Retriever</DogInfo>

@@ -68,7 +68,7 @@ export default function Dashboard() {
             </Grid>
 
             {/* Map */}
-            <Grid item md={3} lg={4}>
+            <Grid item md={3} lg={3}>
               <Paper
                 sx={{
                   display: "flex",
@@ -87,7 +87,7 @@ export default function Dashboard() {
             </Grid>
 
             {/* Dog Card */}
-            <Grid item md={3} lg={4}>
+            <Grid item md={3} lg={3}>
               <DogCard dogName={"Marvin"} />
             </Grid>
           </Grid>
