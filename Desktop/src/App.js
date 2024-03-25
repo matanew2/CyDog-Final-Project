@@ -4,6 +4,8 @@ import Login from "./login/Login";
 import Menu from "./Menu/menu";
 import Assignments from "./assignments/Assignments";
 import Box from "@mui/material/Box";
+import DogLists from "./dogLists/DogLists";
+import Handlers from "./handlers/Handlers";
 
 function App() {
   return (
@@ -13,8 +15,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* <Route path="/dog-list" element={<DogList />} /> */}
-          {/* <Route path="/handlers" element={<Handlers />} /> */}
+          <Route path="/dog-lists" element={<DogLists />} />
+          <Route path="/handlers" element={<Handlers />} />
           <Route path="/tasks" element={<Assignments />} />
         </Routes>
       </Box>

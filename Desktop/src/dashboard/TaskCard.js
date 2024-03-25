@@ -2,13 +2,13 @@ import React from "react";
 import { Grid, Typography,Box } from "@mui/material";
 import "./DogCard.css";
 
-const DogInfo = ({ className, children }) => (
+const TaskInfo = ({ className, children }) => (
   <Typography sx={{ color: "white", fontSize: "14px" }} className={className}>
     {children}
   </Typography>
 );
 
-const DogCard = ({ id, dogName }) => {
+const TaskCard = ({ assignment }) => {
   return (
     <Grid
       container
@@ -29,13 +29,14 @@ const DogCard = ({ id, dogName }) => {
         <Box><Grid item className="dog-pic" /></Box>
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
-        <DogInfo>{dogName} | Golden Retriever</DogInfo>
-        <DogInfo>3 year old</DogInfo>
-        <DogInfo>Search & Rescue</DogInfo>
-        <DogInfo>ID:{id}</DogInfo>
+        <TaskInfo>{assignment?.date}</TaskInfo>
+        <TaskInfo>Status: {assignment?.status}</TaskInfo>
+        <TaskInfo>{assignment?.dogName} | {assignment?.dogType}</TaskInfo>
+        <TaskInfo>{assignment?.task}</TaskInfo>
+        <TaskInfo>ID:{assignment?.id}</TaskInfo>
       </Grid>
     </Grid>
   );
 };
 
-export default DogCard;
+export default TaskCard;

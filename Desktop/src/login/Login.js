@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(""); // username = ' ',   
   const [password, setPassword] = useState("");
 
   const handleUsernameChange = (e) => {
