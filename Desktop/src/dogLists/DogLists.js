@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -12,10 +12,11 @@ import DogCard from "../dashboard/DogCard"
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
+import socket from "../utils/utils";
 
 
 // Assignment component
-const Dog = ({ name, ID, handler }) => {
+const Dog = ({ name, ID, job }) => {
   return (
   <Card sx={{ width: 900, mb: 1, borderRadius: "13px", backgroundColor: "#043934" }} >
     <CardContent>
@@ -30,7 +31,7 @@ const Dog = ({ name, ID, handler }) => {
         }}
       >
         <span>
-        {ID} | {name}  | {handler}
+        {ID} | {name} | {job}
         </span>
       </Typography>
     </CardContent>
@@ -40,27 +41,22 @@ const Dog = ({ name, ID, handler }) => {
 
 // DogListList component
 const DogList = () => {
-  const [doglists, setDogLists] = useState([
-    {
-      name: "Marvin",
-      ID: 1,
-      handler: "Daniella",
-      assignments: ['Search & Rescue', 'Explosive Detect']
-    },
-    {
-        name: "Leo",
-        ID: 2,
-        handler: "Daniella",
-        assignments: []
-      },
-    {
-        name: "Buddy",
-        ID: 3,
-        handler: "Daniella",
-        assignments: ['Search & Rescue']
-        },
-  ]);
+  const [doglists, setDogLists] = useState([]);
   const [selectedDog, setSelectedDog] = useState(null);
+
+  const getDogList = () => {
+    console.log("Requesting dog list");
+    socket.emit("dogList"); // trigger -> Request dog list from the server
+
+    socket.on("dogList", (dogList) => {
+      console.log("Received dog list", dogList);
+      setDogLists(dogList);
+    });
+  }
+
+  useEffect(() => {
+    getDogList();
+  }, []);
 
   return (
     <Grid container>
@@ -100,10 +96,10 @@ const DogList = () => {
                     }}
                   >
                     <Dog 
-                      key={dog.id}
+                      key={dog._id}
                       name={dog.name}
-                      ID={dog.ID}
-                      handler={dog.handler}
+                      ID={dog._id}
+                      job={dog.job}
                     />
                   </Button>
                 </Grid>
@@ -114,10 +110,9 @@ const DogList = () => {
           <Grid
               item
               md={5}
-              lg={3}
+              lg={4}
               sx={{
                 mt: -10,
-                ml: 5,
                 borderRadius: "20px",
                 boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
                 backgroundColor: "#126D65",
@@ -131,13 +126,10 @@ const DogList = () => {
             <Typography variant="h5" sx={{ textAlign: "left", ml: 2, color:"white" }}>
               Dog Name: {selectedDog?.name}
             </Typography><br/>
-            <Typography variant="h5" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-                handler: {selectedDog?.handler}
-            </Typography><br/>
-            <br/><Grid item sx={{ml: 4}}>{selectedDog ? <DogCard id={selectedDog?.ID} dogName={selectedDog?.name} /> : ""}</Grid><br/>
+            <br/><Grid item sx={{ml: 4}}>{selectedDog ? <DogCard id={selectedDog?._id} dogName={selectedDog?.name} breed={selectedDog?.breed} age={selectedDog?.age} job={selectedDog?.job} /> : ''}</Grid><br />
             <Typography variant="h5" sx={{ textAlign: "left", ml: 2, color:"white" }}>
                 Current Assignment: 
-                {selectedDog?.assignments.length > 0 ? (
+                {selectedDog?.assignments?.length > 0 ? (
                     <List>
                     {selectedDog?.assignments.map((assignment) => (
                       <Typography variant="h6" sx={{ textAlign: "left", ml: 2, color:"white" }}>
@@ -146,6 +138,7 @@ const DogList = () => {
                     ))}
                   </List>
                 ) : (
+                  
                   <Typography variant="h6" sx={{ textAlign: "left", ml: 2, color:"white" }}>
                     No assignment
                   </Typography>

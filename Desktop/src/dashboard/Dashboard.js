@@ -12,9 +12,7 @@ import VoiceCommands from "./VoiceCommands";
 import Camera from "./Camera";
 import DogCard from "./DogCard";
 import "./Dashboard.css";
-import io from "socket.io-client";
-
-const socket = io.connect("http://10.0.0.10:8000");
+import socket from "../utils/utils";
 
 const drawerWidth = 268;
 

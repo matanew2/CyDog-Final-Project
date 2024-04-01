@@ -8,7 +8,7 @@ const DogInfo = ({ className, children }) => (
   </Typography>
 );
 
-const DogCard = ({ id, dogName }) => {
+const DogCard = ({ id, dogName, breed, age, job }) => {
   return (
     <Grid
       container
@@ -29,9 +29,9 @@ const DogCard = ({ id, dogName }) => {
         <Box><Grid item className="dog-pic" /></Box>
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
-        <DogInfo>{dogName} | Golden Retriever</DogInfo>
-        <DogInfo>3 year old</DogInfo>
-        <DogInfo>Search & Rescue</DogInfo>
+        <DogInfo>{dogName} | {breed}</DogInfo>
+        <DogInfo>{age}</DogInfo>
+        <DogInfo>{job}</DogInfo>
         <DogInfo>ID:{id}</DogInfo>
       </Grid>
     </Grid>

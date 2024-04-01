@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -13,10 +13,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import TaskCard from "../dashboard/TaskCard"
+import socket from '../utils/utils'
 
 
 // Assignment component
-const Handler = ({ name, ID, dog,job }) => {
+const Handler = ({ name, ID,job }) => {
   return (
   <Card sx={{ width: 900, mb: 1, borderRadius: "13px", backgroundColor: "#043934" }} >
     <CardContent>
@@ -31,7 +32,7 @@ const Handler = ({ name, ID, dog,job }) => {
         }}
       >
         <span>
-        {ID} | {name} | {job} | {dog}
+        {ID} | {name} | {job} 
         </span>
       </Typography>
     </CardContent>
@@ -39,53 +40,26 @@ const Handler = ({ name, ID, dog,job }) => {
   );
 };
 
+
+
 // DogListList component
 const Handlers = () => {
-  const [handlers, setHandlers] = useState([
-    {
-      name: "Matan",
-      ID: 123456789,
-      job: "Search & Rescue",
-      dog: "Buddy",
-      assignments: [
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 1, 'status': 'In Progress', 'date': new Date().toISOString().slice(0, 10)},
-        {'dogName': 'Leo', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 2, 'status': 'Finished', 'date': '2022-12-12'}        
-    ]
-    },
-    {
-      name: "Yael",
-      ID: 987654321,
-      job: "Search & Rescue",
-      dog: "Leo",
-      assignments: [
-        {'dogName': 'Leo', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 3, 'status': 'In Progress', 'date': new Date().toISOString().slice(0, 10)},
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 4, 'status': 'Finished', 'date': '2022-12-12'},
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 9, 'status': 'Finished', 'date': '2022-12-12'},
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 10, 'status': 'Finished', 'date': '2022-12-12'}
-    ]
-    },
-    {
-      name: "Shay",
-      ID: 123123123,
-      job: "Search & Rescue",
-      dog: "Buddy",
-      assignments: [
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 5, 'status': 'In Progress', 'date': new Date().toISOString().slice(0, 10)},
-        {'dogName': 'Leo', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 6, 'status': 'Finished', 'date': '2022-12-12'}
-    ]
-    },
-    {
-      name: "Nadav",
-      ID: 321321321,
-      job: "Search & Rescue",
-      dog: "Leo",
-      assignments: [
-        {'dogName': 'Leo', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 7, 'status': 'In Progress', 'date': new Date().toISOString().slice(0, 10)},
-        {'dogName': 'Buddy', 'dogType': 'Golden Retriever', 'task': 'Find the missing person', 'id': 8, 'status': 'Finished', 'date': '2022-12-12'}
-    ]
-    },
-  ]);
+  const [handlers, setHandlers] = useState([]);
   const [selectedHandler, setSelectedHandler] = useState(null);
+
+  const getHandlerList = () => {
+    console.log("Requesting handler list");
+    socket.emit("handlerList"); // trigger -> Request dog list from the server
+
+    socket.on("handlerList", (handlerList) => {
+      console.log("Received handler list", handlerList);
+      setHandlers(handlerList);
+    });
+  }
+
+  useEffect(() => {
+    getHandlerList();
+  }, []);
 
   return (
     <Grid container>
@@ -125,10 +99,9 @@ const Handlers = () => {
                     }}
                   >
                     <Handler 
-                      key={handler.id}
+                      key={handler._id}
                       name={handler.name}
-                      ID={handler.ID}
-                      dog={handler.dog}
+                      ID={handler._id}
                       job={handler.job}
                     />
                   </Button>
@@ -171,11 +144,11 @@ const Handlers = () => {
                 {selectedHandler?.name}
             </Typography>
             <Typography variant="body" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-                Handler | {selectedHandler?.ID}
+                Handler | {selectedHandler?._id}
             </Typography><br/>
             <Typography variant="h5" sx={{ textAlign: "left", ml: 2, color:"white" }}>
                 Assignments: 
-                {selectedHandler?.assignments.length > 0 ? (
+                {selectedHandler?.assignments?.length > 0 ? (
                     <List>
                     {selectedHandler?.assignments.map((assignment) => (
                       <Typography variant="h6" sx={{ textAlign: "left", ml: 2, color:"white" }}>
