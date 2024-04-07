@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import "./Camera.css";
 
 function Camera() {
@@ -48,22 +50,28 @@ function Camera() {
     if (mediaRecorderRef.current.state !== "recording") {
       return;
     }
-
+  
     mediaRecorderRef.current.stop();
     setRecording(false);
-
+  
     const blob = new Blob(recordedChunks, {
       type: "video/webm; codecs=vp9",
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
-    a.href = url;
-    a.download = "recorded_video.webm";
-    a.click();
-    window.URL.revokeObjectURL(url);
-    console.log(url);
+  
+    // Create a new FormData instance
+    const data = new FormData();
+  
+    // Append the blob to the FormData instance
+    data.append('video', blob, `recorded_video${uuidv4()}.webm`);
+  
+    // Send the FormData instance to the server
+    axios.post('http://192.168.1.5:8000/save-video', data)
+      .then(response => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   };
 
   return (
