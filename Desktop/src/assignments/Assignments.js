@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import socket from "../utils/utils";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -30,8 +31,8 @@ const Assignment = ({ name, dateCreation, dateFinish, handler }) => {
         }}
       >
         <span>
-          {name} | {dateCreation.toLocaleString()} | {" "}
-          {dateFinish.toLocaleString()} | {handler}
+          {name} | {dateCreation} | {" "}
+          {dateFinish} | {handler.name}
         </span>
         <IconButton onClick={() => { console.log('Delete icon clicked!'); }}>
           <DeleteIcon sx={{color: "#FF9900"}}/>
@@ -44,72 +45,22 @@ const Assignment = ({ name, dateCreation, dateFinish, handler }) => {
 
 // AssignmentsList component
 const Assignments = () => {
-  const [assignments, setAssignments] = useState([
-    {
-      name: "Rescue",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },
-    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },
-    {
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },{
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },{
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },{
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },{
-      name: "Adoption",
-      dateCreation: new Date(),
-      dateFinish: new Date(),
-      handler: "Daniella",
-    },
-  ]);
+  const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+
+  const getAssignments = () => {
+    console.log("Requesting task list");
+    socket.emit("taskList"); // trigger -> Request dog list from the server
+
+    socket.on("taskList", (taskList) => {
+      console.log("Received task list", taskList);
+      setAssignments(taskList);
+    });
+  }
+
+  useEffect(() => {
+    getAssignments();
+  }, []);
 
   return (
     <Grid container>
@@ -149,10 +100,10 @@ const Assignments = () => {
                     }}
                   >
                     <Assignment 
-                      key={assignment.id}
-                      name={assignment.name}
-                      dateCreation={assignment.dateCreation}
-                      dateFinish={assignment.dateFinish}
+                      key={assignment._id}
+                      name={assignment.title}
+                      dateCreation={new Date(assignment.createdAt).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      dateFinish={new Date(assignment.dueDate).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       handler={assignment.handler}
                     />
                   </Button>
@@ -180,20 +131,20 @@ const Assignments = () => {
           ><br/>
           
             <Typography variant="h5" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-              {selectedAssignment?.name}
+              {selectedAssignment ? (`Task Name:  ${selectedAssignment?.title}`) : ("") }
             </Typography><br/>
             <Typography variant="body1" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-              {selectedAssignment?.handler}
+              {selectedAssignment ? (`Handler Name:  ${selectedAssignment?.handler.name}`) : ("") }
             </Typography>
             <Typography variant="body1" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-              {selectedAssignment?.dateCreation.toLocaleString()} 
+              {selectedAssignment ? (`Create At:  ${new Date(selectedAssignment.createdAt).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`) : ("") }
             </Typography>
             <Typography variant="body1" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-              {selectedAssignment?.dateFinish.toLocaleString()}
+              {selectedAssignment ? (`End At:  ${new Date(selectedAssignment.dueDate).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`) : ("") }
             </Typography>
-            <br/><Grid item sx={{ml: 4}}>{selectedAssignment ? <DogCard dogName={"Marvin"} /> : ""}</Grid><br/>
+            <br/><Grid item sx={{ml: 2}}>{selectedAssignment ? <DogCard breed={selectedAssignment.dog.breed} age={selectedAssignment.dog.age} job={selectedAssignment.dog.job} id={selectedAssignment.dog._id} dogName={selectedAssignment.dog.name} /> : ""}</Grid><br/>
             <Typography variant="body1" sx={{ textAlign: "left", ml: 2, color:"white" }}>
-              {selectedAssignment ? 'Description:' : 'Select an assignment to view details of it.'}
+              {selectedAssignment ? `Description:` : ""}
             </Typography>
             {selectedAssignment ? <br/> : ""}
             <Grid item>
@@ -205,7 +156,7 @@ const Assignments = () => {
                   ml: 2
                 }} 
               >
-                {selectedAssignment ? 'This is a description of the assignment' : ""}
+                 {selectedAssignment ? `${selectedAssignment.description}` : 'Select an assignment to view details of it.'}
 
               </Typography>
             </Grid><br/>

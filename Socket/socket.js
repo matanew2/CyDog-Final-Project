@@ -28,8 +28,13 @@ module.exports = function(http) {
     // DOG LIST
     socket.on("dogList", async () => { 
       try {
-        const dogList = await DogSchema.find({});
-        io.emit("dogList",dogList); // broadcast to all clients
+        const dogList = await DogSchema.find({}).populate({
+            path: 'tasks',
+            populate: {
+              path: 'handler'
+            }
+          });        
+          io.emit("dogList",dogList); // broadcast to all clients
       } catch (error) {
         console.log("Error fetching dog list:", error);
       }
@@ -38,10 +43,25 @@ module.exports = function(http) {
     // HANDLER LIST
     socket.on("handlerList", async () => {
       try {
-        const handlerList = await HandlerSchema.find({});
+        const handlerList = await HandlerSchema.find({}).populate({
+          path: 'tasks',
+          populate: {
+            path: 'dog'
+          }
+        });    
         io.emit("handlerList", handlerList); // broadcast to all clients
       } catch (error) {
         console.log("Error fetching handler list:", error);
+      }
+    });
+
+    // TASK LIST
+    socket.on("taskList", async () => {
+      try {
+        const taskList = await TaskSchema.find({}).populate("handler").populate("dog");
+        io.emit("taskList", taskList); // broadcast to all clients
+      } catch (error) {
+        console.log("Error fetching task list:", error);
       }
     });
 

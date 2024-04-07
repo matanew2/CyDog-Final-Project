@@ -30,7 +30,7 @@ const DogCard = ({ id, dogName, breed, age, job }) => {
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
         <DogInfo>{dogName} | {breed}</DogInfo>
-        <DogInfo>{age}</DogInfo>
+        <DogInfo>{age} years old</DogInfo>
         <DogInfo>{job}</DogInfo>
         <DogInfo>ID:{id}</DogInfo>
       </Grid>

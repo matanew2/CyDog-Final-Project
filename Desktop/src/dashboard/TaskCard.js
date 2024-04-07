@@ -29,11 +29,10 @@ const TaskCard = ({ assignment }) => {
         <Box><Grid item className="dog-pic" /></Box>
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
-        <TaskInfo>{assignment?.date}</TaskInfo>
-        <TaskInfo>Status: {assignment?.status}</TaskInfo>
-        <TaskInfo>{assignment?.dogName} | {assignment?.dogType}</TaskInfo>
-        <TaskInfo>{assignment?.task}</TaskInfo>
-        <TaskInfo>ID:{assignment?.id}</TaskInfo>
+        <TaskInfo>{assignment?.createdAt}</TaskInfo>
+        <TaskInfo>{assignment?.dog.name} | {assignment?.dog.breed}</TaskInfo>
+        <TaskInfo>{assignment?.title}</TaskInfo>
+        <TaskInfo>ID:{assignment?._id}</TaskInfo>
       </Grid>
     </Grid>
   );
