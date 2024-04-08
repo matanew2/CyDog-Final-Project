@@ -13,6 +13,8 @@ import Camera from "./Camera";
 import DogCard from "./DogCard";
 import "./Dashboard.css";
 import socket from "../utils/utils";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const drawerWidth = 268;
 
@@ -43,6 +45,9 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export default function Dashboard() {
+
+  const {currentTask} = useAuth();
+
   const [location, setLocation] = React.useState({
     latitude: 0.0,
     longitude: 0.0,
@@ -50,7 +55,6 @@ export default function Dashboard() {
 
   React.useEffect(() => {
     socket.on("newLocation", (data) => {
-      console.log(data);
       setLocation({ latitude: data.latitude, longitude: data.longitude });
     });
   }, []);
@@ -61,7 +65,7 @@ export default function Dashboard() {
         <Grid container maxWidth={"xl"} sx={{ mt: 2, ml: 30 }}>
           <Grid container spacing={3}>
             {/* Video */}
-            <Grid item md={5} lg={7} sx={{ height: "75vh" }}>
+            <Grid item md={5} lg={8} sx={{ height: "75vh" }}>
               <Camera />
             </Grid>
 
@@ -80,13 +84,19 @@ export default function Dashboard() {
             </Grid>
 
             {/* Voice Commands */}
-            <Grid item md={5} lg={7}>
+            <Grid item md={5} lg={8}>
               <VoiceCommands socket={socket} />
             </Grid>
 
             {/* Dog Card */}
             <Grid item md={3} lg={3}>
-              <DogCard dogName={"Marvin"} />
+            <DogCard
+                  id={currentTask?.dog?._id}
+                  dogName={currentTask?.dog?.name}
+                  breed={currentTask?.dog?.breed}
+                  age={currentTask?.dog?.age}
+                  job={currentTask?.dog?.job}
+                />
             </Grid>
           </Grid>
         </Grid>

@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
 import auth from "../config/firebase";
 
 const AuthContext = createContext();
@@ -10,6 +15,8 @@ const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [createdTask, setCreatedTask] = useState(false);
+  const [currentTask, setCurrentTask] = useState({});
 
   const register = async (email, password) => {
     try {
@@ -66,6 +73,10 @@ const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUserProfile,
+    createdTask,
+    setCreatedTask,
+    currentTask,
+    setCurrentTask,
   };
 
   return (

@@ -65,6 +65,18 @@ module.exports = function(http) {
       }
     });
 
+    socket.on('newTask', async (task) => {
+      try {
+        console.log(task);
+        const newTask = new TaskSchema(task);
+        await newTask.save();
+        const populateTask = await TaskSchema.findById(newTask._id).populate("handler").populate("dog");
+        io.emit("newTask", populateTask); // broadcast to all clients
+      } catch (error) {
+        console.log("Error creating new task:", error);
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`User disconnected with socket id: ${socket.id}`);
     });
