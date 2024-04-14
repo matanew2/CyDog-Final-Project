@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
 import socket from "../utils/utils";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import Paper from "@mui/material/Paper";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
 import DogCard from "../dashboard/DogCard";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";

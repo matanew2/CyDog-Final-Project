@@ -10,19 +10,10 @@
     z-index: 24;
 }
 
-.dog-picture {
-    text-align: center;
-    width: 87px;
-    height: 40px;
-    background: url(../../public/images/3aae15cd-0ca6-4d62-bdef-325209c1b4f2.png) no-repeat center;
-    background-size: cover;
-    z-index: 46;
-}
 
 .dog-pic {
     width: 90px;
     height: 90px;
-    background: url(../../public/images/65758cca-4112-45c7-9f7b-72f968beaf8b.png) no-repeat center;
     background-size: cover;
     z-index: 32;
     border-radius: 50%;

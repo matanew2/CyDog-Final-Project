@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from "react";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
-import Toolbar from "@mui/material/Toolbar";
 import List from "@mui/material/List";
 import DogCard from "../dashboard/DogCard";
-import DeleteIcon from "@mui/icons-material/Delete";
-import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import TaskCard from "../dashboard/TaskCard";
 import socket from "../utils/utils";
 
 // Assignment component
@@ -68,7 +62,7 @@ const Handlers = () => {
   return (
     <Grid container>
       <Grid item>
-        <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 31 }}>
+        <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 30 }}>
           {/* TASK LISTS */}
           <Grid
             item
@@ -129,7 +123,6 @@ const Handlers = () => {
               flexDirection: "column",
               alignItems: "flex-start",
               overflowY: "auto",
-              overflowY: "auto",
               maxHeight: "800px",
               "&::-webkit-scrollbar": {
                 width: "10px",
@@ -167,16 +160,16 @@ const Handlers = () => {
               {selectedHandler?.tasks?.length > 0 ? (
                 <Paper
                   sx={{
-                    backgroundColor: "#043934",
+                    backgroundColor: "#126D65",
                     borderRadius: "13px",
                     width: 360,
                   }}
                 >
-                  <List>
+                  <List >
                     {selectedHandler?.tasks.map((assignment) => (
-                      <>
+                      <><br />
                         <Typography
-                          variant="h5"
+                          variant="h6"
                           sx={{ textAlign: "left", ml: 2, color: "white" }}
                         >
                           {assignment.title} <br />
@@ -209,7 +202,7 @@ const Handlers = () => {
                             }
                           )}{" "}
                         </Typography>
-                        <Grid item sx={{mb: -1}}>
+                        <Grid item sx={{mb: 1}}>
                           <DogCard
                             key={assignment.dog._id}
                             id={assignment.dog._id}

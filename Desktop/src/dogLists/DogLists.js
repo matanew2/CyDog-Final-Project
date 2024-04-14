@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
   Typography,
   Card,
   CardContent,
-  Box,
   Grid,
   Paper,
-  Toolbar,
+  Box,
   List,
-  IconButton,
   Button,
 } from "@mui/material";
 import DogCard from "../dashboard/DogCard";
-import DeleteIcon from "@mui/icons-material/Delete";
 import socket from "../utils/utils";
 
 // Dog component
@@ -69,7 +65,7 @@ const DogList = () => {
   return (
     <Grid container>
       <Grid item>
-        <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 31 }}>
+        <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 30 }}>
           {/* DOG LISTS */}
           <Grid
             item
@@ -158,6 +154,7 @@ const DogList = () => {
                   breed={selectedDog?.breed}
                   age={selectedDog?.age}
                   job={selectedDog?.job}
+                  avatar={selectedDog?.avatar}
                 />
               ) : (
                 ""
@@ -173,51 +170,60 @@ const DogList = () => {
                 {selectedDog?.tasks?.length > 0 ? (
                   <Paper
                     sx={{
-                      backgroundColor: "#043934",
+                      backgroundColor: "transparent",
                       borderRadius: "13px",
                       width: 360,
                     }}
                   >
                     <List>
                       {selectedDog?.tasks.map((assignment) => (
-                        <>
-                          <Typography
-                            variant="h5"
-                            sx={{ textAlign: "left", ml: 2, color: "white" }}
+                        <Box mb={2}>
+                          <Paper
+                            sx={{
+                              backgroundColor: "#043934",
+                              borderRadius: "13px",
+                              width: 360,
+                            }}
                           >
-                            {assignment.title} <br />
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ textAlign: "left", ml: 2, color: "white" }}
-                          >
-                            Create At:{" "}
-                            {new Date(assignment.createdAt).toLocaleString(
-                              "en-US",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}{" "}
-                            <br />
-                            End At:{" "}
-                            {new Date(assignment.dueDate).toLocaleString(
-                              "en-US",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}{" "}
-                            <br />
-                            Handler: {assignment.handler.name} <br />
-                          </Typography>
-                        </>
+                            <Typography
+                              variant="h6"
+                              sx={{ textAlign: "left", ml: 2, color: "white" }}
+                            >
+                              {assignment.title} <br />
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              sx={{ textAlign: "left", ml: 2, color: "white" }}
+                            >
+                              Create At:{" "}
+                              {new Date(assignment.createdAt).toLocaleString(
+                                "en-US",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}{" "}
+                              <br />
+                              End At:{" "}
+                              {new Date(assignment.dueDate).toLocaleString(
+                                "en-US",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}{" "}
+                              <br />
+                              Handler: {assignment.handler.name} <br />
+                              <br />
+                            </Typography>
+                          </Paper>
+                        </Box>
                       ))}
                     </List>
                   </Paper>

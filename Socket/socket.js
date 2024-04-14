@@ -68,10 +68,22 @@ module.exports = function(http) {
     socket.on('newTask', async (task) => {
       try {
         console.log(task);
+        // create a new task
         const newTask = new TaskSchema(task);
         await newTask.save();
+
+        // update the task list in dog
+        const dog = await DogSchema.findById(task.dog);
+        dog.tasks.push(newTask._id);
+        await dog.save();
+
+        // update the task list in handler
+        const handler = await HandlerSchema.findById(task.handler);
+        handler.tasks.push(newTask._id);
+        await handler.save();
+
+        // populate the task with handler and dog
         const populateTask = await TaskSchema.findById(newTask._id).populate("handler").populate("dog");
-        io.emit("newTask", populateTask); // broadcast to all clients
       } catch (error) {
         console.log("Error creating new task:", error);
       }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, Typography,Box } from "@mui/material";
+import { Grid, Typography, Box } from "@mui/material";
 import "./DogCard.css";
 
 const DogInfo = ({ className, children }) => (
@@ -26,10 +26,17 @@ const DogCard = ({ id, dogName, breed, age, job }) => {
           py: "25px",
         }}
       >
-        <Box><Grid item className="dog-pic" /></Box>
+        <Box>
+        <Grid item className="dog-pic">
+          {console.log(`http://localhost:8000/images/${id}/${dogName}`)}
+          <img src={`http://localhost:8000/images/${id}/${dogName}`} alt={dogName} />
+        </Grid>
+      </Box>
       </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
-        <DogInfo>{dogName} | {breed}</DogInfo>
+        <DogInfo>
+          {dogName} | {breed}
+        </DogInfo>
         <DogInfo>{age} years old</DogInfo>
         <DogInfo>{job}</DogInfo>
         <DogInfo>ID:{id}</DogInfo>
