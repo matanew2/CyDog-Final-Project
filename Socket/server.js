@@ -7,6 +7,8 @@ const cors = require("cors");
 const http = require("http").createServer(app);
 const io = require("./socket")(http);
 const Dog = require("./schema/DogSchema");
+const Handler = require("./schema/HandlerSchema");
+const Task = require("./schema/TaskSchema");
 const DatabaseConnection = require("./database");
 const port = 8000;
 
@@ -41,14 +43,46 @@ app.post("/dogs", async (req, res) => {
   try {
     // create dog
     const dog = new Dog({
-      name: "lex",
-      breed: "labrador",
-      age: 5,
-      job: "service dog",
+      name: "Lola",
+      breed: "Border Collie",
+      age: 6,
+      job: "narcotics detection",
       tasks: [],
     });
     const saveddog = await dog.save();
     res.status(200).send(saveddog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+app.post("/handlers", async (req, res) => {
+  try {
+    // create handler
+    const handler = new Handler({
+      name: "George Smith",
+      age: 20,
+      job: "dog handler",
+      dogs: [],
+    });
+    const savedHandler = await handler.save();
+    res.status(200).send(savedHandler);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+app.delete("/all", async (req, res) => {
+  try {
+    // delete dogs
+    await Dog.deleteMany({});
+    // delete handlers
+    await Handler.deleteMany({});
+    // delete assigned tasks
+    await Task.deleteMany({});
+    res.status(204).send({ message: "All dogs and handlers deleted!"});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err });
