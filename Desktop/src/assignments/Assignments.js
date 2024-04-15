@@ -15,7 +15,18 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 // Assignment component
-const Assignment = ({ name, dateCreation, dateFinish, handler }) => {
+const Assignment = ({ id, name, dateCreation, dateFinish, handler }) => {
+  const deleteTask = (e) => {
+    console.log("Delete icon clicked!");
+    e.stopPropagation();
+    socket.emit("deleteTask", id); // trigger -> Request dog list from the server
+    socket.on("deleteTask", (newTask) => {
+      // listen -> Receive dog list from the server
+      console.log("task deleted", newTask);
+      socket.emit("taskList"); //
+    });
+  };
+
   return (
     <Card
       sx={{
@@ -39,11 +50,7 @@ const Assignment = ({ name, dateCreation, dateFinish, handler }) => {
           <span>
             {name} | {dateCreation} | {dateFinish} | {handler?.name}
           </span>
-          <IconButton
-            onClick={() => {
-              console.log("Delete icon clicked!");
-            }}
-          >
+          <IconButton onClick={deleteTask}>
             <DeleteIcon sx={{ color: "#FF9900" }} />
           </IconButton>
         </Typography>
@@ -64,7 +71,7 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const {setCreatedTask, currentTask, setCurrentTask} = useAuth();
+  const { setCreatedTask, currentTask, setCurrentTask } = useAuth();
 
   const getAssignments = () => {
     console.log("Requesting task list");
@@ -99,6 +106,7 @@ const Assignments = () => {
   const startTask = () => {
     console.log("Start task button clicked!");
     setOpenAddTask(false);
+    console.log(taskName, selectDog, selectHandler, description);
     if (!taskName || !selectDog || !selectHandler || !description) {
       alert("Please fill in all fields.");
       return;
@@ -110,8 +118,9 @@ const Assignments = () => {
       description: description,
       createdAt: new Date(),
     };
-    socket.emit("newTask", task);
+    socket.emit("newTask", task); // trigger -> Request dog list from the server
     socket.on("newTask", (newTask) => {
+      // listen -> Receive dog list from the server
       console.log("Received new task", newTask);
       if (newTask) {
         setAssignments([...assignments, newTask]);
@@ -119,284 +128,293 @@ const Assignments = () => {
         setCurrentTask(newTask);
         console.log(currentTask);
         navigate("/dashboard");
-      }  
-    }) 
-  }
+      }
+    });
+  };
 
   return (
-    <Grid container>
-      <Grid item>
-        <Grid
-          container
-          justifyContent="flex-start"
-          sx={{ mt: 10, ml: 30, gap: 1 }}
-        >
-          {/* NEW TASK */}
-          <Grid container justifyContent="center">
-            <Button
-              variant="contained"
-              onClick={addTask}
-              sx={{ backgroundColor: "#FF9900" }}
-            >
-              <DriveFileRenameOutlineIcon /> New Task
-            </Button>
-          </Grid>
-          {/* TASK LISTS */}
-          <Grid
-            item
-            md={7}
-            lg={7.5}
-            sx={{
-              overflowY: "auto",
-              maxHeight: "700px",
-              "&::-webkit-scrollbar": {
-                width: "10px",
-              },
-              "&::-webkit-scrollbar-track": {
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                borderRadius: "5px",
-              },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#043934",
-                borderRadius: "5px",
-              },
-            }}
+    <Grid container sx={{ ml: -1.2 }}>
+      <Grid
+        container
+        justifyContent="flex-start"
+        sx={{ mt: 4, ml: 30, gap: 7.6 }}
+      >
+        {/* NEW TASK */}
+        <Grid container sx={{ ml: 25 }} justifyContent="center">
+          <Button
+            variant="contained"
+            onClick={addTask}
+            sx={{ backgroundColor: "#FF9900" }}
           >
-            {assignments.map((assignment) => (
-              <Grid item sx={{ p: 0, m: 0 }}>
-                <Button
-                  onClick={() => {
-                    setSelectedAssignment(assignment);
-                    setOpenAddTask(false);
-                  }}
-                  sx={{
-                    borderColor:
-                      selectedAssignment === assignment
-                        ? "#30D2C3"
-                        : "transparent",
-                    borderWidth: 3,
-                    borderStyle: "solid",
-                    borderRadius: 4,
-                    p: 0,
-                  }}
-                >
-                  <Assignment
-                    key={assignment?._id}
-                    name={assignment?.title}
-                    dateCreation={new Date(
-                      assignment?.createdAt
+            <DriveFileRenameOutlineIcon /> New Task
+          </Button>
+        </Grid>
+
+        {/* TASK LISTS */}
+        <Grid
+          item
+          md={7}
+          lg={7.5}
+          sx={{
+            overflowY: "auto",
+            maxHeight: "700px",
+            "&::-webkit-scrollbar": {
+              width: "10px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              borderRadius: "5px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#043934",
+              borderRadius: "5px",
+            },
+          }}
+        >
+          {assignments.map((assignment) => (
+            <Grid item sx={{ p: 0, m: 0 }}>
+              <Button
+                onClick={() => {
+                  setSelectedAssignment(assignment);
+                  setOpenAddTask(false);
+                }}
+                sx={{
+                  borderColor:
+                    selectedAssignment === assignment
+                      ? "#30D2C3"
+                      : "transparent",
+                  borderWidth: 3,
+                  borderStyle: "solid",
+                  borderRadius: 4,
+                  p: 0,
+                }}
+              >
+                <Assignment
+                  key={assignment?._id}
+                  id={assignment?._id}
+                  name={assignment?.title}
+                  dateCreation={new Date(assignment?.createdAt).toLocaleString(
+                    "en-US",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                  dateFinish={new Date(assignment?.dueDate).toLocaleString(
+                    "en-US",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                  handler={assignment?.handler}
+                />
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* TASK DETAILS */}
+        <Grid
+          item
+          md={5}
+          lg={4}
+          sx={{
+            mt: -16,
+            borderRadius: "20px",
+            boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+            backgroundColor: "#126D65",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            overflowY: "auto",
+            maxHeight: "800px", // Add this line
+          }}
+        >
+          <br />
+          {!openAddTask ? (
+            <>
+              <Typography
+                variant="h5"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                {selectedAssignment
+                  ? `Task Name:  ${selectedAssignment?.title}`
+                  : ""}
+              </Typography>
+              <br />
+              <Typography
+                variant="body1"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                {selectedAssignment
+                  ? `Handler Name:  ${selectedAssignment?.handler.name}`
+                  : ""}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                {selectedAssignment
+                  ? `Create At:  ${new Date(
+                      selectedAssignment.createdAt
                     ).toLocaleString("en-US", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
-                    dateFinish={new Date(assignment?.dueDate).toLocaleString(
-                      "en-US",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                    handler={assignment?.handler}
+                    })}`
+                  : ""}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                {selectedAssignment
+                  ? `End At:  ${new Date(
+                      selectedAssignment.dueDate
+                    ).toLocaleString("en-US", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`
+                  : ""}
+              </Typography>
+              <br />
+              <Grid item sx={{ ml: 2 }}>
+                {selectedAssignment ? (
+                  <DogCard
+                    breed={selectedAssignment.dog.breed}
+                    age={selectedAssignment.dog.age}
+                    job={selectedAssignment.dog.job}
+                    id={selectedAssignment.dog._id}
+                    dogName={selectedAssignment.dog.name}
                   />
-                </Button>
+                ) : (
+                  ""
+                )}
               </Grid>
-            ))}
-          </Grid>
-
-          {/* TASK DETAILS */}
-          <Grid
-            item
-            md={5}
-            lg={3}
-            sx={{
-              mt: -16,
-              borderRadius: "20px",
-              boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-              backgroundColor: "#126D65",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              overflowY: "auto",
-              maxHeight: "800px", // Add this line
-            }}
-          >
-            <br />
-            {!openAddTask ? (
-              <>
+              <br />
+              <Typography
+                variant="body1"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                {selectedAssignment ? `Description:` : ""}
+              </Typography>
+              {selectedAssignment ? <br /> : ""}
+              <Grid item>
                 <Typography
-                  variant="h5"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
+                  sx={{
+                    fontSize: selectedAssignment ? 15 : 19.5,
+                    width: "100%",
+                    color: "white",
+                    ml: 2,
+                  }}
                 >
                   {selectedAssignment
-                    ? `Task Name:  ${selectedAssignment?.title}`
-                    : ""}
+                    ? `${selectedAssignment.description}`
+                    : "Select an assignment to view details of it."}
                 </Typography>
-                <br />
-                <Typography
-                  variant="body1"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
-                >
-                  {selectedAssignment
-                    ? `Handler Name:  ${selectedAssignment?.handler.name}`
-                    : ""}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
-                >
-                  {selectedAssignment
-                    ? `Create At:  ${new Date(
-                        selectedAssignment.createdAt
-                      ).toLocaleString("en-US", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}`
-                    : ""}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
-                >
-                  {selectedAssignment
-                    ? `End At:  ${new Date(
-                        selectedAssignment.dueDate
-                      ).toLocaleString("en-US", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}`
-                    : ""}
-                </Typography>
-                <br />
-                <Grid item sx={{ ml: 2 }}>
-                  {selectedAssignment ? (
-                    <DogCard
-                      breed={selectedAssignment.dog.breed}
-                      age={selectedAssignment.dog.age}
-                      job={selectedAssignment.dog.job}
-                      id={selectedAssignment.dog._id}
-                      dogName={selectedAssignment.dog.name}
-                    />
-                  ) : (
-                    ""
-                  )}
-                </Grid>
-                <br />
-                <Typography
-                  variant="body1"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
-                >
-                  {selectedAssignment ? `Description:` : ""}
-                </Typography>
-                {selectedAssignment ? <br /> : ""}
-                <Grid item>
-                  <Typography
-                    sx={{
-                      fontSize: 13,
-                      width: "100%",
-                      color: "white",
-                      ml: 2,
-                    }}
-                  >
-                    {selectedAssignment
-                      ? `${selectedAssignment.description}`
-                      : "Select an assignment to view details of it."}
-                  </Typography>
-                </Grid>
-                <br />
-              </>
-            ) : (
-              <Grid container gap = {3} justifyContent="center" padding = {2}>
-                <Typography
-                  variant="h5"
-                  sx={{ textAlign: "left", ml: 2, color: "white" }}
-                >
-                  New Task
-                </Typography>
-                <br />
-                <TextField
-                  id="outlined-basic"
-                  label="Task Name"
-                  variant="outlined"
-                  onChange={(e) => setTaskName(e.target.value)}
-                  sx={{ textAlign: "left", ml: 2, width: "80%" }}
-                  InputLabelProps={{
-                    style: { color: "#fff" },
-                  }}
-                />
-                <br />
-                <TextField 
-                  select
-                  id="outlined-basic" 
-                  label="Dog Name" 
-                  variant="outlined" 
-                  onChange={(e) => {
-                    const selectedDog = dogList.find(dog => dog._id === e.target.value);
-                    setSelectDog(selectedDog);
-                  }}
-                  sx={{ textAlign: "left", ml: 2, width: "80%" }} 
-                  InputLabelProps={{
-                    style: { color: "#fff" },
-                  }}
-                >
-                  {dogList?.map((dog) => (
-                    <MenuItem key={dog._id} value={dog._id}>
-                      {dog.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <br />
-                <TextField 
-                  select
-                  id="outlined-basic" 
-                  label="Handler Name" 
-                  variant="outlined" 
-                  onChange={(e) => {
-                    const selectedHandler = handlerList.find(handler => handler._id === e.target.value);
-                    setSelectHandler(selectedHandler);
-                  }}
-                  sx={{ textAlign: "left", ml: 2, width: "80%" }} 
-                  InputLabelProps={{
-                    style: { color: "#fff" },
-                  }}
-                >
-                  {handlerList?.map((handler) => (
-                    <MenuItem key={handler._id} value={handler._id}>
-                      {handler.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <br />
-                <TextField
-                  id="outlined-multiline-static"
-                  label="Description"
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  onChange={(e) => setDescription(e.target.value)}
-                  sx={{ textAlign: "left", ml: 2, width: "80%" }}
-                  InputLabelProps={{
-                    style: { color: "#fff" },
-                  }}
-                />
-                <br />
-                <Button variant="contained" onClick={startTask} sx={{ backgroundColor: "#FF9900", ml: 2, mt: 2 }}>
-                  Start Task
-                </Button>
               </Grid>
-            )}
-          </Grid>
+              <br />
+            </>
+          ) : (
+            <Grid container gap={3} justifyContent="center" padding={2}>
+              <Typography
+                variant="h5"
+                sx={{ textAlign: "left", ml: 2, color: "white" }}
+              >
+                New Task
+              </Typography>
+              <br />
+              <TextField
+                id="outlined-basic"
+                label="Task Name"
+                variant="outlined"
+                onChange={(e) => setTaskName(e.target.value)}
+                sx={{ textAlign: "left", ml: 2, width: "80%" }}
+                InputLabelProps={{
+                  style: { color: "#fff" },
+                }}
+              />
+              <br />
+              <TextField
+                select
+                id="outlined-basic"
+                label="Dog Name"
+                variant="outlined"
+                onChange={(e) => {
+                  const selectedDog = dogList.find(
+                    (dog) => dog._id === e.target.value
+                  );
+                  setSelectDog(selectedDog);
+                }}
+                sx={{ textAlign: "left", ml: 2, width: "80%" }}
+                InputLabelProps={{
+                  style: { color: "#fff" },
+                }}
+              >
+                {dogList?.map((dog) => (
+                  <MenuItem key={dog._id} value={dog._id}>
+                    {dog.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <br />
+              <TextField
+                select
+                id="outlined-basic"
+                label="Handler Name"
+                variant="outlined"
+                onChange={(e) => {
+                  const selectedHandler = handlerList.find(
+                    (handler) => handler._id === e.target.value
+                  );
+                  setSelectHandler(selectedHandler);
+                }}
+                sx={{ textAlign: "left", ml: 2, width: "80%" }}
+                InputLabelProps={{
+                  style: { color: "#fff" },
+                }}
+              >
+                {handlerList?.map((handler) => (
+                  <MenuItem key={handler._id} value={handler._id}>
+                    {handler.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <br />
+              <TextField
+                id="outlined-multiline-static"
+                label="Description"
+                multiline
+                rows={4}
+                variant="outlined"
+                onChange={(e) => setDescription(e.target.value)}
+                sx={{ textAlign: "left", ml: 2, width: "80%" }}
+                InputLabelProps={{
+                  style: { color: "#fff" },
+                }}
+              />
+              <br />
+              <Button
+                variant="contained"
+                onClick={startTask}
+                sx={{ backgroundColor: "#FF9900", ml: 2, mt: 2 }}
+              >
+                Start Task
+              </Button>
+            </Grid>
+          )}
         </Grid>
       </Grid>
     </Grid>

@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState, useEffect} from "react";
 import { Grid, Typography, Box } from "@mui/material";
 import "./DogCard.css";
 
@@ -9,6 +9,19 @@ const DogInfo = ({ className, children }) => (
 );
 
 const DogCard = ({ id, dogName, breed, age, job }) => {
+  
+  const [imgSrc, setImgSrc] = useState('');
+
+  useEffect(() => {
+    import(`../images/${id}/${dogName}.png`)
+      .then((image) => {
+        setImgSrc(image.default);
+      })
+      .catch((error) => {
+        console.error(`Error loading image: ${error}`);
+      });
+  }, [id, dogName]);
+  
   return (
     <Grid
       container
@@ -26,13 +39,9 @@ const DogCard = ({ id, dogName, breed, age, job }) => {
           py: "25px",
         }}
       >
-        <Box>
-        <Grid item className="dog-pic">
-          {console.log(`http://localhost:8000/images/${id}/${dogName}`)}
-          <img src={`http://localhost:8000/images/${id}/${dogName}`} alt={dogName} />
-        </Grid>
-      </Box>
-      </Grid>
+    <Grid  item>
+      <img src={imgSrc} alt={dogName} className="dog-pic"/>
+    </Grid>      </Grid>
       <Grid item sx={{ px: "12px", py: "30px" }}>
         <DogInfo>
           {dogName} | {breed}

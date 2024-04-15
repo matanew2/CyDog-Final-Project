@@ -15,7 +15,7 @@ function Menu() {
           <Toolbar
             sx={{
               backgroundColor: "#126D65",
-              px: [1],
+              px: [2], py: [2], // padding on the x and y axis
             }}
           >
             <Grid item className="logo" />

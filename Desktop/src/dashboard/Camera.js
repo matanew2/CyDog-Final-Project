@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
+import socket from "../utils/utils";
 import Button from "@mui/material/Button";
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
+import { Link } from "react-router-dom";
+import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import useAuth from "../contexts/AuthContext";
 import "./Camera.css";
 
-function Camera() {
+function Camera(currentTask) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
@@ -50,30 +55,36 @@ function Camera() {
     if (mediaRecorderRef.current.state !== "recording") {
       return;
     }
-  
+
     mediaRecorderRef.current.stop();
     setRecording(false);
-  
+
     const blob = new Blob(recordedChunks, {
       type: "video/webm; codecs=vp9",
     });
-  
+
     // Create a new FormData instance
     const data = new FormData();
-  
+
     // Append the blob to the FormData instance
-    data.append('video', blob, `recorded_video${uuidv4()}.webm`);
-  
+    data.append("video", blob, `recorded_video${uuidv4()}.webm`);
+
     // Send the FormData instance to the server
-    axios.post('http://192.168.1.5:8000/save-video', data)
-      .then(response => {
+    axios
+      .post("http://192.168.1.5:8000/save-video", data)
+      .then((response) => {
         console.log(response.data);
       })
       .catch((error) => {
-        console.error('Error:', error);
+        console.error("Error:", error);
       });
   };
 
+  const handleFinishTask = () => {
+     // Send the video to the server
+     socket.emit("finishTask", currentTask);
+    handleStopRecording(); // Stop recording 
+  };
   return (
     <Grid
       item
@@ -100,6 +111,26 @@ function Camera() {
             transform: "rotateY(180deg)",
           }}
         />
+      </Grid>
+
+      {/* Record Button */}
+      <Grid item sx={{ top: 6, maxWidth: "15%", position: "absolute" }}>
+        <Link
+          to="/tasks"
+          style={{ textDecoration: "none" }}
+          onClick={() => {
+            handleFinishTask();
+          }}
+        >
+          <ListItemButton
+            sx={{ backgroundColor: "red", borderRadius: 3 }}
+          >
+            <ListItemIcon sx={{ minWidth: "35px" }}>
+              <AssignmentTurnedInIcon sx={{ color: "white" }} />
+            </ListItemIcon>
+            <ListItemText primary="Finish" sx={{ color: "white" }} />
+          </ListItemButton>
+        </Link>
       </Grid>
 
       {/* Record Button */}

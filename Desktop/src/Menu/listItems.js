@@ -3,17 +3,17 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import TasksIcon from "@mui/icons-material/Assignment";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import List from "@mui/material/List";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function ListItems() {
-
-  const {createdTask} = useAuth() // Boolean state for tracking login status
+  const { createdTask } = useAuth(); // Boolean state for tracking login status
   return (
-    <List>
+    <List sx={{ width: 195 }}>
       {createdTask && (
-        <Link to="/dashboard">
+        <Link to="/dashboard" style={{ textDecoration: "none" }}>
           <ListItemButton>
             <ListItemIcon>
               <img
@@ -27,7 +27,7 @@ export default function ListItems() {
         </Link>
       )}
       {!createdTask && (
-        <Link to="/dog-lists">
+        <Link to="/dog-lists" style={{ textDecoration: "none" }}>
           <ListItemButton>
             <ListItemIcon>
               <img
@@ -41,7 +41,7 @@ export default function ListItems() {
         </Link>
       )}
       {!createdTask && (
-        <Link to="/handlers">
+        <Link to="/handlers" style={{ textDecoration: "none" }}>
           <ListItemButton>
             <ListItemIcon>
               <img
@@ -55,7 +55,7 @@ export default function ListItems() {
         </Link>
       )}
       {!createdTask && (
-        <Link to="/tasks">
+        <Link to="/tasks" style={{ textDecoration: "none" }}>
           <ListItemButton>
             <ListItemIcon>
               <TasksIcon sx={{ color: "white", fontSize: "30px" }} />

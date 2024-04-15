@@ -63,8 +63,7 @@ const DogList = () => {
   }, []);
 
   return (
-    <Grid container>
-      <Grid item>
+    <Grid container sx={{ ml: -1.2 }}>
         <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 30 }}>
           {/* DOG LISTS */}
           <Grid
@@ -115,10 +114,9 @@ const DogList = () => {
           <Grid
             item
             md={5}
-            lg={3}
+            lg={4}
             sx={{
               mt: -9,
-              ml: 4,
               borderRadius: "20px",
               boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
               backgroundColor: "#126D65",
@@ -240,7 +238,6 @@ const DogList = () => {
             <br />
           </Grid>
         </Grid>
-      </Grid>
     </Grid>
   );
 };

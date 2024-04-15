@@ -16,7 +16,7 @@
     height: 90px;
     background-size: cover;
     z-index: 32;
-    border-radius: 50%;
+    border-radius: 20%;
 }
 
 .active-dogs-bg {

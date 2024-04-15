@@ -60,8 +60,7 @@ const Handlers = () => {
   }, []);
 
   return (
-    <Grid container>
-      <Grid item>
+    <Grid container sx={{ ml: -1.2 }}>
         <Grid container justifyContent="flex-start" sx={{ mt: 9, ml: 30 }}>
           {/* TASK LISTS */}
           <Grid
@@ -112,10 +111,9 @@ const Handlers = () => {
           <Grid
             item
             md={5}
-            lg={3}
+            lg={4}
             sx={{
               mt: -9,
-              ml: 4,
               borderRadius: "20px",
               boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
               backgroundColor: "#126D65",
@@ -158,13 +156,6 @@ const Handlers = () => {
             >
               Assignments:
               {selectedHandler?.tasks?.length > 0 ? (
-                <Paper
-                  sx={{
-                    backgroundColor: "#126D65",
-                    borderRadius: "13px",
-                    width: 360,
-                  }}
-                >
                   <List >
                     {selectedHandler?.tasks.map((assignment) => (
                       <><br />
@@ -202,7 +193,7 @@ const Handlers = () => {
                             }
                           )}{" "}
                         </Typography>
-                        <Grid item sx={{mb: 1}}>
+                        <Grid item sx={{mb: 2}}>
                           <DogCard
                             key={assignment.dog._id}
                             id={assignment.dog._id}
@@ -215,7 +206,6 @@ const Handlers = () => {
                       </>
                     ))}
                   </List>
-                </Paper>
               ) : (
                 <Typography
                   variant="h6"
@@ -228,7 +218,6 @@ const Handlers = () => {
             <br />
           </Grid>
         </Grid>
-      </Grid>
     </Grid>
   );
 };

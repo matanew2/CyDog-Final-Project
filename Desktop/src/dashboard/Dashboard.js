@@ -61,12 +61,12 @@ export default function Dashboard() {
 
   return (
     <Grid container>
-      <Grid item>
-        <Grid container maxWidth={"xl"} sx={{ mt: 2, ml: 30 }}>
-          <Grid container spacing={3}>
+      <Grid item >
+        <Grid container maxWidth={"xl"} sx={{ mt: 2, ml: 26 }}>
+          <Grid container spacing={2}>
             {/* Video */}
-            <Grid item md={5} lg={8} sx={{ height: "75vh" }}>
-              <Camera />
+            <Grid item md={5} lg={8.7} sx={{ height: "75vh" }}>
+              <Camera currentTas={currentTask} />
             </Grid>
 
             {/* Map */}
@@ -84,7 +84,7 @@ export default function Dashboard() {
             </Grid>
 
             {/* Voice Commands */}
-            <Grid item md={5} lg={8}>
+            <Grid item md={5} lg={8.7}>
               <VoiceCommands socket={socket} />
             </Grid>
 
