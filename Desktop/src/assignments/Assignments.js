@@ -13,6 +13,7 @@ import MenuItem from "@mui/material/MenuItem";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import PopupVideo from "./VideoWindow";
 
 // Assignment component
 const Assignment = ({ id, name, dateCreation, dateFinish, handler }) => {
@@ -71,7 +72,7 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const { setCreatedTask, currentTask, setCurrentTask } = useAuth();
+  const { setCreatedTask, currentTask, setCurrentTask, currentVideoFormData } = useAuth();
 
   const getAssignments = () => {
     console.log("Requesting task list");
@@ -310,7 +311,7 @@ const Assignments = () => {
               >
                 {selectedAssignment ? `Description:` : ""}
               </Typography>
-              {selectedAssignment ? <br /> : ""}
+
               <Grid item>
                 <Typography
                   sx={{
@@ -323,6 +324,8 @@ const Assignments = () => {
                   {selectedAssignment
                     ? `${selectedAssignment.description}`
                     : "Select an assignment to view details of it."}
+                    <br /><br />
+                    {selectedAssignment && <PopupVideo video={currentVideoFormData} />}
                 </Typography>
               </Grid>
               <br />

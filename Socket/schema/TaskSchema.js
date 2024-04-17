@@ -25,7 +25,10 @@ const taskSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    videoName: {
+        type: String
+    },
 });
 
 const Task = mongoose.model('Task', taskSchema);

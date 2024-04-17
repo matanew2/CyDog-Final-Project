@@ -19,7 +19,7 @@ app.use(express.json());
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.post("/save-video", upload.single("video"), (req, res) => {
+app.post("/save-video/:id", upload.single("video"), (req, res) => {
   const video = req.file;
   const dirPath = path.join(__dirname, "public/videos");
   const filePath = path.join(dirPath, video.originalname);
@@ -43,10 +43,10 @@ app.post("/dogs", async (req, res) => {
   try {
     // create dog
     const dog = new Dog({
-      name: "Lola",
-      breed: "Border Collie",
-      age: 6,
-      job: "narcotics detection",
+      name: "Lex",
+      breed: "Labrador",
+      age: 4,
+      job: "sniffing",
       tasks: [],
     });
     const saveddog = await dog.save();
@@ -61,10 +61,9 @@ app.post("/handlers", async (req, res) => {
   try {
     // create handler
     const handler = new Handler({
-      name: "George Smith",
-      age: 20,
+      name: "Kim Jong-un",
       job: "dog handler",
-      dogs: [],
+      tasks: [],
     });
     const savedHandler = await handler.save();
     res.status(200).send(savedHandler);
@@ -82,7 +81,7 @@ app.delete("/all", async (req, res) => {
     await Handler.deleteMany({});
     // delete assigned tasks
     await Task.deleteMany({});
-    res.status(204).send({ message: "All dogs and handlers deleted!"});
+    res.status(204).send({ message: "All dogs and handlers deleted!" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err });

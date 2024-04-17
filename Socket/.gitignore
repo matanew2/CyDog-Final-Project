@@ -8,6 +8,9 @@ node_modules/
 dist/
 web-build/
 
+#Videos
+public/videos/
+
 # Native
 *.orig.*
 *.jks

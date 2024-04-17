@@ -66,7 +66,7 @@ export default function Dashboard() {
           <Grid container spacing={2}>
             {/* Video */}
             <Grid item md={5} lg={8.7} sx={{ height: "75vh" }}>
-              <Camera currentTas={currentTask} />
+              <Camera currentTask={currentTask} />
             </Grid>
 
             {/* Map */}

@@ -99,15 +99,17 @@ module.exports = function (http) {
         // delete the task
         await TaskSchema.findByIdAndDelete(taskId);
 
-        // update the task list in dog
-        const dog = await DogSchema.findOne({ tasks: taskId });
-        dog.tasks = dog.tasks.filter((task) => task != taskId);
-        await dog.save();
+        // update the task list in all dogs that contain the task
+        await DogSchema.updateMany(
+          { tasks: taskId },
+          { $pull: { tasks: taskId } }
+        );
 
-        // update the task list in handler
-        const handler = await HandlerSchema.findOne({ tasks: taskId });
-        handler.tasks = handler.tasks.filter((task) => task != taskId);
-        await handler.save();
+        // update the task list in all handlers that contain the task
+        await HandlerSchema.updateMany(
+          { tasks: taskId },
+          { $pull: { tasks: taskId } }
+        );
 
         io.emit("deleteTask", taskId); // broadcast to all clients
       } catch (error) {
@@ -117,12 +119,19 @@ module.exports = function (http) {
 
     socket.on("finishTask", async (task) => {
       try {
-        console.log('task',task.currentTas);
         // finish the task
-        const finishedTask = await TaskSchema.findById(task.currentTas._id);
-        finishedTask.dueDate = new Date();
-
-        await finishedTask.save();
+        const finishedTask = await TaskSchema.findByIdAndUpdate(
+          task.currentTask._id,
+          { dueDate: new Date() },
+          { new: true } // this option returns the updated document
+        );
+    
+        // Check if the task was successfully updated
+        if (!finishedTask) {
+          console.log("Error: Task not found");
+          return;
+        }
+    
         // io.emit("finishTask", finishedTask); // broadcast to all clients
       } catch (error) {
         console.log("Error finishing task:", error);
