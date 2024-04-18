@@ -10,7 +10,7 @@ import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import useAuth from "../contexts/AuthContext";
 import "./Camera.css";
 
-function Camera(currentTask) {
+function Camera({currentTask, setCurrentTask}) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
@@ -32,7 +32,6 @@ function Camera(currentTask) {
         });
     }
   }, []);
-
   const handleStartRecording = () => {
     setRecording(true);
     mediaRecorderRef.current = new MediaRecorder(videoRef.current.srcObject, {
@@ -44,13 +43,11 @@ function Camera(currentTask) {
     mediaRecorderRef.current.start(10); // collect 10ms of data
     setRecordedChunks([]);
   };
-
   const handleDataAvailable = (e) => {
     if (e.data.size > 0) {
       setRecordedChunks((prev) => prev.concat(e.data));
     }
   };
-
   const handleStopRecording = () => {
     if (mediaRecorderRef.current.state !== "recording") {
       return;
@@ -67,11 +64,17 @@ function Camera(currentTask) {
     const data = new FormData();
 
     // Append the blob to the FormData instance
-    data.append("video", blob, `recorded_video${uuidv4()}.webm`);
+    const videoFileName = `recorded_video${uuidv4()}.webm`;
+
+    const tempTask = {...currentTask};
+    tempTask.videoName = videoFileName;
+    setCurrentTask({...tempTask});
+  
+    data.append("video", blob, videoFileName);
 
     // Send the FormData instance to the server
     axios
-      .post("http://192.168.1.5:8000/save-video", data)
+      .post("http://localhost:8000/save-video/"+currentTask._id, data)
       .then((response) => {
         console.log(response.data);
       })
@@ -80,11 +83,6 @@ function Camera(currentTask) {
       });
   };
 
-  const handleFinishTask = () => {
-     // Send the video to the server
-     socket.emit("finishTask", currentTask);
-    handleStopRecording(); // Stop recording 
-  };
   return (
     <Grid
       item
@@ -119,7 +117,7 @@ function Camera(currentTask) {
           to="/tasks"
           style={{ textDecoration: "none" }}
           onClick={() => {
-            handleFinishTask();
+            handleStopRecording();
           }}
         >
           <ListItemButton

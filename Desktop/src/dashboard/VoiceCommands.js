@@ -30,7 +30,7 @@ function CommandButton({ command, selectedCommand, handleCommandClick }) {
   );
 }
 
-export default function VoiceCommands({ socket }) {
+export default function VoiceCommands({ socket, currentTask }) {
   // eslint-disable-next-line
   const [commands, setCommands] = useState([
     "bark",
@@ -44,7 +44,7 @@ export default function VoiceCommands({ socket }) {
   const [selectedCommand, setSelectedCommand] = useState(null);
 
   const sendToDog = async () => {
-    socket.emit("command", selectedCommand);
+    socket.emit("command", selectedCommand, currentTask?._id);
   };
 
   const handleCommandClick = (event) => {

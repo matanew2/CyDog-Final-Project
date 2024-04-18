@@ -7,7 +7,6 @@ module.exports = function (http) {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
-      allowedHeaders: ["my-custom-header"],
       credentials: true,
     },
   });
@@ -20,8 +19,21 @@ module.exports = function (http) {
       console.log("User at location:", location.latitude, location.longitude);
       io.emit("newLocation", location); // broadcast to all clients
     });
-    socket.on("command", (command) => {
+    socket.on("command", async (command, taskId) => {
       console.log(`Received command: ${command}`);
+      console.log(`Task ID: ${taskId}`);
+
+      // Send the command to the dog
+      const task = await TaskSchema.findById(taskId);
+      if (!task) {
+        console.log("Error: Task not found");
+        return;
+      }
+      console.log(task);
+      task.commands.push(command);
+      await task.save();
+      console.log("task updated with command");
+
       io.emit("command", command); // broadcast to all clients
     });
 
@@ -119,20 +131,19 @@ module.exports = function (http) {
 
     socket.on("finishTask", async (task) => {
       try {
+        console.log(task);
         // finish the task
-        const finishedTask = await TaskSchema.findByIdAndUpdate(
-          task.currentTask._id,
-          { dueDate: new Date() },
-          { new: true } // this option returns the updated document
-        );
-    
-        // Check if the task was successfully updated
-        if (!finishedTask) {
+        if (task && task._id && task.videoName) {
+          const finishedTask = await TaskSchema.findByIdAndUpdate(
+            task._id,
+            { videoName: task.videoName, dueDate: new Date() },
+            { new: true } // this option returns the updated document
+          );        
+          console.log(finishedTask);
+          io.emit("finishTask", finishedTask); // broadcast to all clients
+        } else {
           console.log("Error: Task not found");
-          return;
-        }
-    
-        // io.emit("finishTask", finishedTask); // broadcast to all clients
+        }      
       } catch (error) {
         console.log("Error finishing task:", error);
       }

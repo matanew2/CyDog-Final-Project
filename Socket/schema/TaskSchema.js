@@ -27,7 +27,12 @@ const taskSchema = new mongoose.Schema({
         default: Date.now
     },
     videoName: {
-        type: String
+        type: String,
+        default: '<no video>'
+    },
+    commands: {
+        type: [String],
+        default: []
     },
 });
 

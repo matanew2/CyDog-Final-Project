@@ -46,7 +46,7 @@ const Drawer = styled(MuiDrawer, {
 
 export default function Dashboard() {
 
-  const {currentTask} = useAuth();
+  const {currentTask, setCurrentTask} = useAuth();
 
   const [location, setLocation] = React.useState({
     latitude: 0.0,
@@ -66,7 +66,7 @@ export default function Dashboard() {
           <Grid container spacing={2}>
             {/* Video */}
             <Grid item md={5} lg={8.7} sx={{ height: "75vh" }}>
-              <Camera currentTask={currentTask} />
+              <Camera currentTask={currentTask} setCurrentTask={setCurrentTask} />
             </Grid>
 
             {/* Map */}
@@ -85,7 +85,7 @@ export default function Dashboard() {
 
             {/* Voice Commands */}
             <Grid item md={5} lg={8.7}>
-              <VoiceCommands socket={socket} />
+              <VoiceCommands socket={socket} currentTask={currentTask} />
             </Grid>
 
             {/* Dog Card */}

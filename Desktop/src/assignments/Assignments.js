@@ -72,14 +72,15 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const { setCreatedTask, currentTask, setCurrentTask, currentVideoFormData } = useAuth();
+  const { setCreatedTask, currentTask, setCurrentTask } = useAuth();
+  const [recordingLink, setRecordingLink] = useState("http://localhost:8000/public/videos/");
 
   const getAssignments = () => {
     console.log("Requesting task list");
     socket.emit("taskList"); // trigger -> Request dog list from the server
 
     socket.on("taskList", (taskList) => {
-      console.log("Received task list", taskList);
+      // console.log("Received task list", taskList);
       setAssignments(taskList);
     });
   };
@@ -324,8 +325,32 @@ const Assignments = () => {
                   {selectedAssignment
                     ? `${selectedAssignment.description}`
                     : "Select an assignment to view details of it."}
-                    <br /><br />
-                    {selectedAssignment && <PopupVideo video={currentVideoFormData} />}
+                  <br />
+                  <br />
+                  <Typography sx={{ textAlign: "left", color: "white" }}>
+                    {selectedAssignment && selectedAssignment.videoName !== "<no video>" && <PopupVideo name={recordingLink + selectedAssignment.videoName} />}
+                  </Typography>
+                  <br />
+                  {selectedAssignment && "Commands:"}
+                  <br />
+                  {selectedAssignment &&
+                    selectedAssignment.commands.map((command, index) => (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        value={command}
+                        sx={{
+                          height: "50px",
+                          width: "100px",
+                          fontSize: "16px",
+                          color: "black",
+                          backgroundColor: "#EDEDED",
+                          margin: "10px",
+                        }}
+                      >
+                        {command}
+                      </Button>
+                    ))}
                 </Typography>
               </Grid>
               <br />

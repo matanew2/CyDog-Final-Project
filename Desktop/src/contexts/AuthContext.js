@@ -6,6 +6,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import auth from "../config/firebase";
+import socket from "../utils/utils";
 
 const AuthContext = createContext();
 
@@ -65,6 +66,10 @@ const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    if( currentTask.videoName != "<no video>") {
+      console.log('after recording', currentTask);
+      socket.emit("finishTask", currentTask);
+    }
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -72,7 +77,7 @@ const AuthProvider = ({ children }) => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [currentTask]);
 
   useEffect(() => {
     // Save currentUser to localStorage whenever it changes
