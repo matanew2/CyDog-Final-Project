@@ -78,9 +78,7 @@ const PopupVideo = ({ name }) => {
             className="flipped-video"
             controls
             ref={videoRef}
-            width="100%"
-            height="100%"
-            style={{ borderRadius: "20px" }}
+            style={{ borderRadius: "20px", width: "900px", height: "600px" }} // Adjust these values as needed
           >
             <source src={videoUrl} type="video/webm" />
             Your browser does not support the video tag.

@@ -72,7 +72,7 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const { setCreatedTask, currentTask, setCurrentTask } = useAuth();
+  const { setCreatedTask, currentTask, setCurrentTask, currentUser } = useAuth();
   const [recordingLink, setRecordingLink] = useState("http://localhost:8000/public/videos/");
 
   const getAssignments = () => {
@@ -129,7 +129,7 @@ const Assignments = () => {
         setCreatedTask(true);
         setCurrentTask(newTask);
         console.log(currentTask);
-        navigate("/dashboard");
+        navigate(`/profile/${currentUser?.reloadUserInfo?.localId}/dashboard`);
       }
     });
   };

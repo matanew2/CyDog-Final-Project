@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from "uuid";
 import { Link } from "react-router-dom";
 import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import useAuth from "../contexts/AuthContext";
 import "./Camera.css";
 
-function Camera({currentTask, setCurrentTask}) {
+
+function Camera({currentTask, setCurrentTask, currentUser}) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
@@ -114,7 +114,7 @@ function Camera({currentTask, setCurrentTask}) {
       {/* Record Button */}
       <Grid item sx={{ top: 6, maxWidth: "15%", position: "absolute" }}>
         <Link
-          to="/tasks"
+          to={`/profile/${currentUser?.reloadUserInfo?.localId}/tasks`}
           style={{ textDecoration: "none" }}
           onClick={() => {
             handleStopRecording();

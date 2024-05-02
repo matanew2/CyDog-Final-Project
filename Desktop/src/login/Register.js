@@ -9,42 +9,46 @@ import {
   Typography,
   Avatar,
 } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { CircularProgress } from "@mui/material";
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, login, setError } = useAuth();
+  const { currentUser, register, setError } = useAuth();
 
   useEffect(() => {
     if (currentUser) {
-      setError("");
-      
       navigate("/profile/" + currentUser.reloadUserInfo.localId+"/tasks");
     }
-  }, [currentUser, navigate, setError]);
+  }, [currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      setLoading(true);
-      await login(email, password);
-    } catch (e) {
-      setError("Failed to login: Invalid email or password");
-    } finally {
-      setLoading(false);
+    if (password !== confirmPassword) {
+      return setError("Passwords do not match");
     }
+
+    try {
+      setError("");
+      setLoading(true);
+      await register(email, password);
+    } catch (e) {
+      setError("Failed to register user");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -66,7 +70,7 @@ const Login = () => {
         }}
       >
         <Typography variant="h4" align="center" gutterBottom>
-          Login
+          Register
         </Typography>
         <Avatar style={{ margin: "0 auto", backgroundColor: "#3f51b5" }}>
           <AccountCircleIcon />
@@ -105,6 +109,23 @@ const Login = () => {
               }}
             />
           </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
           <Grid item>
             <Button
               startIcon={<PersonIcon />}
@@ -116,21 +137,21 @@ const Login = () => {
               size="large"
               fullWidth
             >
-              {loading ? <CircularProgress size={24} /> : "Login"}
+              {loading ? <CircularProgress size={24} /> : "Register"}
             </Button>
           </Grid>
           <Box mt={2} textAlign="center">
             <Typography variant="body2">
-              Don't have an account?
+              Already have an account?
               <Link
-                to="/register"
+                to="/login"
                 style={{
                   textDecoration: "none",
                   color: "#3f51b5",
                   marginLeft: "5px",
                 }}
               >
-                Register
+                Login
               </Link>
             </Typography>
           </Box>
@@ -140,4 +161,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

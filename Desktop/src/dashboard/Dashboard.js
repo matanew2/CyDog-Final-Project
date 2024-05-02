@@ -1,10 +1,6 @@
 import * as React from "react";
 import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
-import IconButton from "@mui/material/IconButton";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Map from "../dashboard/Map";
@@ -13,40 +9,11 @@ import Camera from "./Camera";
 import DogCard from "./DogCard";
 import "./Dashboard.css";
 import socket from "../utils/utils";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-
-const drawerWidth = 268;
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme, open }) => ({
-  "& .MuiDrawer-paper": {
-    position: "relative",
-    whiteSpace: "nowrap",
-    width: drawerWidth,
-    transition: theme.transitions.create("width", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    boxSizing: "border-box",
-    ...(!open && {
-      overflowX: "hidden",
-      transition: theme.transitions.create("width", {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
-      width: theme.spacing(7),
-      [theme.breakpoints.up("sm")]: {
-        width: theme.spacing(9),
-      },
-    }),
-  },
-}));
 
 export default function Dashboard() {
 
-  const {currentTask, setCurrentTask} = useAuth();
+  const {currentTask, setCurrentTask, currentUser} = useAuth();
 
   const [location, setLocation] = React.useState({
     latitude: 0.0,
@@ -66,7 +33,7 @@ export default function Dashboard() {
           <Grid container spacing={2}>
             {/* Video */}
             <Grid item md={5} lg={8.7} sx={{ height: "75vh" }}>
-              <Camera currentTask={currentTask} setCurrentTask={setCurrentTask} />
+              <Camera currentTask={currentTask} setCurrentTask={setCurrentTask} currentUser={currentUser} />
             </Grid>
 
             {/* Map */}

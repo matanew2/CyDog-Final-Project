@@ -13,17 +13,11 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentTask, setCurrentTask] = useState({});
-  const [createdTask, setCreatedTask] = useState(() => {
-    const storedCreatedTask = localStorage.getItem("createdTask");
-    return storedCreatedTask ? JSON.parse(storedCreatedTask) : false;
-  });
+  const [createdTask, setCreatedTask] = useState(false); // Initialize createdTask to false
 
   const register = async (email, password) => {
     try {
@@ -38,7 +32,6 @@ const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      setCreatedTask(true); // Set createdTask to true after successful login
       return true; // return true if sign-in is successful
     } catch (error) {
       setError(error.message);
@@ -49,7 +42,7 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await signOut(auth);
-      setCreatedTask(false); // Set createdTask to false after logout
+      // setCreatedTask(false); // Set createdTask to false after logout
       return true;
     } catch (error) {
       setError(error.message);
@@ -66,28 +59,17 @@ const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if( currentTask.videoName != "<no video>") {
+    if( currentTask.videoName !== "<no video>") {
       console.log('after recording', currentTask);
       socket.emit("finishTask", currentTask);
     }
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
-      setCreatedTask(!!user); // Set createdTask based on whether user is authenticated
     });
 
     return unsubscribe;
   }, [currentTask]);
-
-  useEffect(() => {
-    // Save currentUser to localStorage whenever it changes
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
-    // Save createdTask to localStorage whenever it changes
-    localStorage.setItem("createdTask", JSON.stringify(createdTask));
-  }, [createdTask]);
 
   const value = {
     currentUser,
