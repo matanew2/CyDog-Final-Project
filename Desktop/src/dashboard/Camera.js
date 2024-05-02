@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
-import socket from "../utils/utils";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +9,7 @@ import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import "./Camera.css";
 
 
-function Camera({currentTask, setCurrentTask, currentUser}) {
+function Camera({currentTask, setCurrentTask, currentUser, setCreatedTask}) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
@@ -118,6 +117,7 @@ function Camera({currentTask, setCurrentTask, currentUser}) {
           style={{ textDecoration: "none" }}
           onClick={() => {
             handleStopRecording();
+            setCreatedTask(false);
           }}
         >
           <ListItemButton
