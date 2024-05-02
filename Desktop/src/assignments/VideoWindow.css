@@ -1,0 +1,7 @@
+.flipped-video {
+    transform: scaleX(-1);
+}
+
+.flipped-video::-webkit-media-controls {
+    transform: scaleX(-1);
+}
