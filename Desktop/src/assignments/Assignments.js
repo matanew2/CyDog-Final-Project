@@ -72,8 +72,8 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const { setCreatedTask, currentTask, setCurrentTask, currentUser } = useAuth();
-  const [recordingLink, setRecordingLink] = useState("http://localhost:8000/public/videos/");
+  const { setCreatedTask, currentTask, setCurrentTask, currentUser, setMessage } = useAuth();
+  const [recordingLink] = useState("http://localhost:8000/public/videos/");
 
   const getAssignments = () => {
     console.log("Requesting task list");
@@ -110,7 +110,7 @@ const Assignments = () => {
     setOpenAddTask(false);
     console.log(taskName, selectDog, selectHandler, description);
     if (!taskName || !selectDog || !selectHandler || !description) {
-      alert("Please fill in all fields.");
+      setMessage("Please fill in all fields.");
       return;
     }
     const task = {

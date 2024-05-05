@@ -25,7 +25,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, register, setError } = useAuth();
+  const { currentUser, register, setMessage } = useAuth();
 
   useEffect(() => {
     if (currentUser) {
@@ -37,15 +37,15 @@ const Register = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      return setError("Passwords do not match");
+      return setMessage("Passwords do not match");
     }
 
     try {
-      setError("");
+      setMessage("");
       setLoading(true);
       await register(email, password);
     } catch (e) {
-      setError("Failed to register user");
+      setMessage("Failed to register user");
     }
 
     setLoading(false);

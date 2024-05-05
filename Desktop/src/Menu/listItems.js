@@ -59,7 +59,7 @@ export default function ListItems() {
             <ListItemIcon>
               <TasksIcon sx={{ color: "white", fontSize: "30px" }} />
             </ListItemIcon>
-            <ListItemText primary="Assigment" sx={{ color: "white" }} />
+            <ListItemText primary="Tasks" sx={{ color: "white" }} />
           </ListItemButton>
         </Link>
       )}

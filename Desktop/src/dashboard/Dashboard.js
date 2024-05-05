@@ -1,6 +1,4 @@
 import * as React from "react";
-import { styled } from "@mui/material/styles";
-import MuiDrawer from "@mui/material/Drawer";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Map from "../dashboard/Map";
@@ -13,7 +11,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
 
-  const {currentTask, setCurrentTask, currentUser, setCreatedTask} = useAuth();
+  const {doubleCheck, setMessage, currentTask, setCurrentTask, currentUser, setCreatedTask} = useAuth();
 
   const [location, setLocation] = React.useState({
     latitude: 0.0,
@@ -33,7 +31,7 @@ export default function Dashboard() {
           <Grid container spacing={2}>
             {/* Video */}
             <Grid item md={5} lg={8.7} sx={{ height: "75vh" }}>
-              <Camera currentTask={currentTask} setCurrentTask={setCurrentTask} currentUser={currentUser} setCreatedTask={setCreatedTask}/>
+              <Camera doubleCheck={doubleCheck} setMessage={setMessage} currentTask={currentTask} setCurrentTask={setCurrentTask} currentUser={currentUser} setCreatedTask={setCreatedTask}/>
             </Grid>
 
             {/* Map */}

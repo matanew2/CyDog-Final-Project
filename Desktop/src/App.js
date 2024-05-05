@@ -8,14 +8,14 @@ import DogLists from "./dogLists/DogLists";
 import Handlers from "./handlers/Handlers";
 import {WithPrivateRoute,CreateTaskPrivateRoute} from "./auth/Auth";
 import Register from "./login/Register";
-import ErrorMessage from "./error/ErrorMessage";
+import InfoMessage from "./error/InfoMessage";
 import AuthProvider from "./contexts/AuthContext";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <ErrorMessage />
+        <InfoMessage />
         <Box className="blur-background">
           <Menu />
           <Routes>

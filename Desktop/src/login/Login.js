@@ -24,15 +24,15 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, login, setError } = useAuth();
+  const { currentUser, login, setMessage } = useAuth();
 
   useEffect(() => {
     if (currentUser) {
-      setError("");
+      setMessage("");
       
       navigate("/profile/" + currentUser.reloadUserInfo.localId+"/tasks");
     }
-  }, [currentUser, navigate, setError]);
+  }, [currentUser, navigate, setMessage]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +41,7 @@ const Login = () => {
       setLoading(true);
       await login(email, password);
     } catch (e) {
-      setError("Failed to login: Invalid email or password");
+      setMessage("Failed to login: Invalid email or password");
     } finally {
       setLoading(false);
     }

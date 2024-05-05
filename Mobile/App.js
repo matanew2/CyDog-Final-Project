@@ -5,7 +5,7 @@ import { playSound } from "./components/SoundPlayer";
 import LocationManager from "./components/LocationManager";
 import io from "socket.io-client";
 
-const socket = io("http://10.0.0.10:8000", {
+const socket = io("http://192.168.1.5:8000", {
   transports: ["websocket"],
   forceNew: true,
 });

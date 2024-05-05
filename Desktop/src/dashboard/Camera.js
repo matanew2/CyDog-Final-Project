@@ -4,17 +4,35 @@ import Button from "@mui/material/Button";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Link } from "react-router-dom";
-import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { ListItemIcon, ListItemText } from "@mui/material";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import "./Camera.css";
+import ConfirmMessage from "../error/ConfirmMessage";
 
-
-function Camera({currentTask, setCurrentTask, currentUser, setCreatedTask}) {
+function Camera({
+  setMessage,
+  currentTask,
+  setCurrentTask,
+  currentUser,
+  setCreatedTask,
+  doubleCheck,
+}) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [permission, setPermission] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const handleConfirm = () => {
+    handleStopRecording();
+    setCreatedTask(false);
+    setIsConfirmOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsConfirmOpen(false);
+  };
 
   useEffect(() => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -48,7 +66,7 @@ function Camera({currentTask, setCurrentTask, currentUser, setCreatedTask}) {
     }
   };
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current.state !== "recording") {
+    if (mediaRecorderRef?.current?.state !== "recording") {
       return;
     }
 
@@ -65,15 +83,15 @@ function Camera({currentTask, setCurrentTask, currentUser, setCreatedTask}) {
     // Append the blob to the FormData instance
     const videoFileName = `recorded_video${uuidv4()}.webm`;
 
-    const tempTask = {...currentTask};
+    const tempTask = { ...currentTask };
     tempTask.videoName = videoFileName;
-    setCurrentTask({...tempTask});
-  
+    setCurrentTask({ ...tempTask });
+
     data.append("video", blob, videoFileName);
 
     // Send the FormData instance to the server
     axios
-      .post("http://localhost:8000/save-video/"+currentTask._id, data)
+      .post("http://localhost:8000/save-video/" + currentTask._id, data)
       .then((response) => {
         console.log(response.data);
       })
@@ -113,21 +131,22 @@ function Camera({currentTask, setCurrentTask, currentUser, setCreatedTask}) {
       {/* Record Button */}
       <Grid item sx={{ top: 6, maxWidth: "15%", position: "absolute" }}>
         <Link
-          to={`/profile/${currentUser?.reloadUserInfo?.localId}/tasks`}
-          style={{ textDecoration: "none" }}
-          onClick={() => {
-            handleStopRecording();
-            setCreatedTask(false);
-          }}
+          to={
+            doubleCheck
+              ? `/profile/${currentUser?.reloadUserInfo?.localId}/tasks`
+              : `/profile/${currentUser?.reloadUserInfo?.localId}/dashboard`
+          }
+          style={{ textDecoration: "none", color: "red" }}
         >
-          <ListItemButton
-            sx={{ backgroundColor: "red", borderRadius: 3 }}
-          >
+          <Button onClick={() => setIsConfirmOpen(true)} sx={{ backgroundColor: 'red', color: 'white' }}>
             <ListItemIcon sx={{ minWidth: "35px" }}>
               <AssignmentTurnedInIcon sx={{ color: "white" }} />
             </ListItemIcon>
             <ListItemText primary="Finish" sx={{ color: "white" }} />
-          </ListItemButton>
+          </Button>
+          {isConfirmOpen && (
+            <ConfirmMessage onConfirm={handleConfirm} onCancel={handleCancel} />
+          )}
         </Link>
       </Grid>
 

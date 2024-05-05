@@ -15,16 +15,17 @@ export const useAuth = () => useContext(AuthContext);
 const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [currentTask, setCurrentTask] = useState({});
   const [createdTask, setCreatedTask] = useState(false); // Initialize createdTask to false
+  const [doubleCheck, setDoubleCheck] = useState(false); // Initialize doubleCheck to false
 
   const register = async (email, password) => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
-      setError(error.message);
+      setMessage(error.message);
       return false;
     }
   };
@@ -34,7 +35,7 @@ const AuthProvider = ({ children }) => {
       await signInWithEmailAndPassword(auth, email, password);
       return true; // return true if sign-in is successful
     } catch (error) {
-      setError(error.message);
+      setMessage(error.message);
       return false; // return false if an error occurs
     }
   };
@@ -45,7 +46,7 @@ const AuthProvider = ({ children }) => {
       // setCreatedTask(false); // Set createdTask to false after logout
       return true;
     } catch (error) {
-      setError(error.message);
+      setMessage(error.message);
       return false;
     }
   };
@@ -54,13 +55,13 @@ const AuthProvider = ({ children }) => {
     try {
       await updateProfile(user, profile);
     } catch (error) {
-      setError(error.message);
+      setMessage(error.message);
     }
   };
 
   useEffect(() => {
-    if( currentTask.videoName !== "<no video>") {
-      console.log('after recording', currentTask);
+    if (currentTask.videoName !== "<no video>") {
+      console.log("after recording", currentTask);
       socket.emit("finishTask", currentTask);
     }
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -73,8 +74,8 @@ const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    error,
-    setError,
+    message,
+    setMessage,
     login,
     register,
     logout,
@@ -83,6 +84,8 @@ const AuthProvider = ({ children }) => {
     setCurrentTask,
     createdTask, // Include createdTask in the context value
     setCreatedTask,
+    doubleCheck,
+    setDoubleCheck,
   };
 
   return (
