@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const MapComponent = ({ location }) => {
+const MapComponent = ({ currentTask, setCurrentTask, location }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const polylineRef = useRef(null);
@@ -40,7 +40,7 @@ const MapComponent = ({ location }) => {
     return () => {
       mapRef.current.remove();
     };
-  }, []); // This effect runs once after the initial render
+  }, [location]); // This effect runs once after the initial render
 
   useEffect(() => {
     if (
@@ -55,8 +55,15 @@ const MapComponent = ({ location }) => {
 
       // Redraw polyline with new locations
       polylineRef.current.setLatLngs(locationsRef.current);
+
+      console.log(locationsRef.current);
+      // Update currentTask with new locations
+      setCurrentTask({
+        ...currentTask,
+        locations: locationsRef.current,
+      });
     }
-  }, [location]); // This effect runs whenever location changes
+  }, [setCurrentTask, currentTask, location.latitude, location.longitude]);
 
   return (
     <div

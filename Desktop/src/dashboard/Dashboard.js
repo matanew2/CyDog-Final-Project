@@ -43,7 +43,7 @@ export default function Dashboard() {
                   width: "100%",
                 }}
               >
-                <Map location={location} />
+                <Map currentTask={currentTask} setCurrentTask={setCurrentTask} location={location} />
               </Paper>
     
             </Grid>
