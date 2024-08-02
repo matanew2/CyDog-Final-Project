@@ -8,7 +8,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function ListItems() {
-  const { createdTask, currentUser } = useAuth(); // Boolean state for tracking login status
+  // Get the createdTask and currentUser from AuthContext
+  const { createdTask, currentUser } = useAuth(); // Custom hook
   return (
     <List sx={{ width: 195 }}>
       {createdTask &&  (

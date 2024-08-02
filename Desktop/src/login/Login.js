@@ -17,6 +17,23 @@ import LockIcon from "@mui/icons-material/Lock";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { CircularProgress } from "@mui/material";
 
+
+/**
+ * Login component
+ * @returns {JSX.Element}
+ * @var {string} email - User's email
+ * @var {string} password - User's password
+ * @var {boolean} loading - Loading state
+ * @var {function} setEmail - Set email state
+ * @var {function} setPassword - Set password state
+ * @var {function} setLoading - Set loading state
+ * @var {function} handleSubmit - Handle submit function
+ * @var {function} navigate - Navigation function
+ * @var {object} currentUser - Current user object
+ * @var {function} login - Login function
+ * @var {function} setMessage - Set message function
+ * @description Login component for user login
+ */
 const Login = () => {
   const navigate = useNavigate();
 

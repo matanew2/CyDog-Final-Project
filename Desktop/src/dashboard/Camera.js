@@ -9,6 +9,17 @@ import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import "./Camera.css";
 import ConfirmMessage from "../error/ConfirmMessage";
 
+/**
+ * Camera component
+ * @param {function} setMessage - Set message function
+ * @param {object} currentTask - Current task object
+ * @param {function} setCurrentTask - Set current task function
+ * @param {object} currentUser - Current user object
+ * @param {function} setCreatedTask - Set created task function
+ * @param {boolean} doubleCheck - Double check state
+ * @returns {JSX.Element} - Camera component
+ * @description Camera component for recording video
+ */
 function Camera({
   setMessage,
   currentTask,

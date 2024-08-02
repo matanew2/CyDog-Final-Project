@@ -9,7 +9,13 @@ import DogCard from "../dashboard/DogCard";
 import Button from "@mui/material/Button";
 import socket from "../utils/utils";
 
-// Assignment component
+/**
+ * @param {string} name - Handler's name
+ * @param {string} ID - Handler's ID
+ * @param {string} job - Handler's job
+ * @returns {JSX.Element} - Handler component
+ * @description Handler component for displaying handler information
+ */
 const Handler = ({ name, ID, job }) => {
   return (
     <Card
@@ -40,7 +46,22 @@ const Handler = ({ name, ID, job }) => {
   );
 };
 
-// DogListList component
+/**
+ * @returns {JSX.Element} - Handlers component
+ * @description Handlers component for displaying handler list
+ * and handler details
+ * @var {array} handlers - List of handlers
+ * @var {object} selectedHandler - Selected handler
+ * @var {function} getHandlerList - Get handler list function
+ * @var {function} setSelectedHandler - Set selected handler function
+ * @var {function} setHandlers - Set handlers function
+ * @var {function} useEffect - Side effect hook
+ * @var {function} useState - Hook for managing local state
+ * @var {function} socket - Socket.io client
+ * @var {JSX.Element} - Handlers component
+ * @description Handlers component for displaying handler list
+ * and handler details
+ */
 const Handlers = () => {
   const [handlers, setHandlers] = useState([]);
   const [selectedHandler, setSelectedHandler] = useState(null);

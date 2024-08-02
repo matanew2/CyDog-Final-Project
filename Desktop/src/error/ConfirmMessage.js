@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -6,6 +6,13 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
 
+/**
+ * ConfirmMessage component
+ * @param {function} onConfirm - Confirm function
+ * @param {function} onCancel - Cancel function
+ * @returns {JSX.Element} - ConfirmMessage component
+ * @description ConfirmMessage component for displaying confirmation message
+ */
 function ConfirmMessage({ onConfirm, onCancel }) {
     return (
         <Dialog open={true}>

@@ -9,6 +9,15 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 
+/**
+ * InfoMessage component
+ * @returns {JSX.Element} 
+ * @description InfoMessage component for displaying information message
+ * @var {string} message - Message
+ * @var {function} setMessage - Set message function
+ * @var {function} handleClose - Handle close function
+ * @var {JSX.Element} - InfoMessage component
+ */
 export default function InfoMessage() {
     const { message, setMessage } = useAuth();
 

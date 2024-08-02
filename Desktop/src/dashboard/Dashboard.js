@@ -9,6 +9,20 @@ import "./Dashboard.css";
 import socket from "../utils/utils";
 import { useAuth } from "../contexts/AuthContext";
 
+/**
+ * Dashboard component
+ * @returns {JSX.Element}
+ * @description Dashboard component for displaying the dashboard
+ * @var {object} location - Location
+ * @var {function} setLocation - Set location
+ * @var {object} doubleCheck - Double check
+ * @var {function} setMessage - Set message
+ * @var {object} currentTask - Current task
+ * @var {function} setCurrentTask - Set current task
+ * @var {object} currentUser - Current user
+ * @var {function} setCreatedTask - Set created task
+ * @var {JSX.Element} - Dashboard component
+ */
 export default function Dashboard() {
 
   const {doubleCheck, setMessage, currentTask, setCurrentTask, currentUser, setCreatedTask} = useAuth();

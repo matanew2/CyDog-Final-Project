@@ -12,7 +12,14 @@ import {
 import DogCard from "../dashboard/DogCard";
 import socket from "../utils/utils";
 
-// Dog component
+/**
+ * Dog component
+ * @param {string} name - Dog's name
+ * @param {string} ID - Dog's ID
+ * @param {string} job - Dog's job
+ * @returns {JSX.Element} - Dog component
+ * @description Dog component for displaying dog information
+ */
 const Dog = ({ name, ID, job }) => {
   return (
     <Card
@@ -43,7 +50,12 @@ const Dog = ({ name, ID, job }) => {
   );
 };
 
-// DogList component
+/**
+ * DogList component
+ * @returns {JSX.Element} - DogList component
+ * @description DogList component for displaying dog list
+ * and dog details
+ */
 const DogList = () => {
   const [doglists, setDogLists] = useState([]);
   const [selectedDog, setSelectedDog] = useState(null);

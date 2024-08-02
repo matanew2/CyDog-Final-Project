@@ -1,13 +1,31 @@
 import React,{useState, useEffect} from "react";
-import { Grid, Typography, Box } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import "./DogCard.css";
 
+/**
+ * DogInfo component
+ * @param {string} className - Class name
+ * @param {string} children - Children
+ * @returns {JSX.Element} - DogInfo component
+ * @description DogInfo component for displaying dog information
+ */
 const DogInfo = ({ className, children }) => (
   <Typography sx={{ color: "white", fontSize: "14px" }} className={className}>
     {children}
   </Typography>
 );
 
+
+/**
+ * DogCard component
+ * @param {string} id - Dog's ID
+ * @param {string} dogName - Dog's name
+ * @param {string} breed - Dog's breed
+ * @param {string} age - Dog's age
+ * @param {string} job - Dog's job
+ * @returns {JSX.Element} - DogCard component
+ * @description DogCard component for displaying dog card
+ */
 const DogCard = ({ id, dogName, breed, age, job }) => {
   
   const [imgSrc, setImgSrc] = useState('');

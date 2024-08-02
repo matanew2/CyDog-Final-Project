@@ -5,6 +5,14 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import "./VoiceCommands.css";
 
+/**
+ * CommandButton component
+ * @param {string} command - Command
+ * @param {string} selectedCommand - Selected command
+ * @param {function} handleCommandClick - Handle command click function
+ * @returns {JSX.Element} - CommandButton component
+ * @description CommandButton component for displaying command button
+ */
 function CommandButton({ command, selectedCommand, handleCommandClick }) {
   return (
     <Button
@@ -30,6 +38,12 @@ function CommandButton({ command, selectedCommand, handleCommandClick }) {
   );
 }
 
+/**
+ * VoiceCommands component
+ * @param {object} socket - Socket object
+ * @param {object} currentTask - Current task object
+ * @returns {JSX.Element} - VoiceCommands component
+ */
 export default function VoiceCommands({ socket, currentTask }) {
   // eslint-disable-next-line
   const [commands, setCommands] = useState([

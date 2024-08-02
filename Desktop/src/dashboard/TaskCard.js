@@ -2,12 +2,28 @@ import React from "react";
 import { Grid, Typography,Box } from "@mui/material";
 import "./DogCard.css";
 
+/**
+ * TaskInfo component
+ * @param {string} className - Class name
+ * @param {string} children - Children
+ * @returns {JSX.Element} - TaskInfo component
+ * @description TaskInfo component for displaying task information
+ */
 const TaskInfo = ({ className, children }) => (
   <Typography sx={{ color: "white", fontSize: "14px" }} className={className}>
     {children}
   </Typography>
 );
 
+/**
+ * TaskCard component
+ * @param {object} assignment - Assignment object
+ * @returns {JSX.Element} - TaskCard component
+ * @description TaskCard component for displaying task card
+ * @var {object} assignment - Assignment object
+ * @var {function} TaskInfo - TaskInfo component
+ * @var {function} setImgSrc - Set image source function
+ */
 const TaskCard = ({ assignment }) => {
   return (
     <Grid

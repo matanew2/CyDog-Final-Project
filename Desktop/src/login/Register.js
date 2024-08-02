@@ -17,6 +17,24 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
+/**
+ * Register component
+ * @returns {JSX.Element}
+ * @var {string} email - User's email
+ * @var {string} password - User's password
+ * @var {string} confirmPassword - User's password confirmation
+ * @var {boolean} loading - Loading state
+ * @var {function} setEmail - Set email state
+ * @var {function} setPassword - Set password state
+ * @var {function} setConfirmPassword - Set confirmPassword state
+ * @var {function} setLoading - Set loading state
+ * @var {function} handleSubmit - Handle submit function
+ * @var {function} navigate - Navigation function
+ * @var {object} currentUser - Current user object
+ * @var {function} register - Register function
+ * @var {function} setMessage - Set message function
+ * @description Register component for user registration
+ */
 const Register = () => {
   const navigate = useNavigate();
 
@@ -27,9 +45,10 @@ const Register = () => {
 
   const { currentUser, register, setMessage } = useAuth();
 
+  // Redirect to tasks page if user is already logged in
   useEffect(() => {
     if (currentUser) {
-      navigate("/profile/" + currentUser.reloadUserInfo.localId+"/tasks");
+      navigate("/profile/" + currentUser.reloadUserInfo.localId + "/tasks");
     }
   }, [currentUser, navigate]);
 

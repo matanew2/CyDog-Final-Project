@@ -11,6 +11,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 function Menu() {
 
+  // Logout function from AuthContext
   const {logout} = useAuth();
   
   return (
