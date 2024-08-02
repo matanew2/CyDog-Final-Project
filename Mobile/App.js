@@ -5,19 +5,29 @@ import { playSound } from "./components/SoundPlayer";
 import LocationManager from "./components/LocationManager";
 import io from "socket.io-client";
 
+/* socket connection */
 const socket = io("http://192.168.1.5:8000", {
   transports: ["websocket"],
   forceNew: true,
 });
 
+/* Socket connection error handling */
 socket.on("connect_error", (err) => {
   console.log(`Connection Error: ${err.message}`);
 });
 
+/**
+ * App component
+ * Description: Main component of the app
+ * @var {string} sound - Sound name
+ * @var {object} location - Location object
+ * @returns {JSX.Element} - App component
+ */
 export default function App() {
   const [sound, setSound] = useState(null);
   const [location, setLocation] = useState(null);
 
+  /* Listen for commands from the server */
   useEffect(() => {
     const commandListener = (command) => {
       console.log("Play command:", command);
@@ -32,6 +42,7 @@ export default function App() {
     };
   }, []); // Empty dependency array so this runs only once
 
+  /* Listen for location updates from the server */
   const handleLocationChange = (newLocation) => {
     setLocation(newLocation);
     console.log("New location:", newLocation);

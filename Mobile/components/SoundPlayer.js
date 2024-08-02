@@ -1,6 +1,9 @@
 // SoundPlayer.js
 import { Audio } from "expo-av";
 
+/**
+ * Sound files
+ */
 export const soundFiles = {
   bark: require("../assets/sounds/bark.wav"),
   bite: require("../assets/sounds/bite.wav"),
@@ -11,11 +14,16 @@ export const soundFiles = {
   stay: require("../assets/sounds/stay.wav"),
 };
 
+/**
+ * Play sound
+ * @param {string} soundFileName - Sound file name
+ * @returns {Promise<void>} - Promise representing the sound playback
+ */
 export const playSound = async (soundFileName) => {
   const soundObject = new Audio.Sound();
   try {
-    await soundObject.loadAsync(soundFiles[soundFileName]);
-    await soundObject.playAsync();
+    await soundObject.loadAsync(soundFiles[soundFileName]); // Load the sound file
+    await soundObject.playAsync(); // Play the sound
   } catch (error) {
     console.error("Error playing sound: ", error);
   }
