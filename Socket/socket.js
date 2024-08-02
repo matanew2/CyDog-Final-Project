@@ -2,7 +2,14 @@ const DogSchema = require("./schema/DogSchema");
 const HandlerSchema = require("./schema/HandlerSchema");
 const TaskSchema = require("./schema/TaskSchema");
 
+/**
+ * Socket.io
+ * @param {http.Server} http - HTTP server
+ * @returns {SocketIO.Server} - Socket.io server
+ * @description Create a socket.io server
+ */
 module.exports = function (http) {
+  // Create a socket.io server with CORS enabled
   const io = require("socket.io")(http, {
     cors: {
       origin: "*",
@@ -11,14 +18,22 @@ module.exports = function (http) {
     },
   });
 
+  /**
+   * Connection event
+   * @param {SocketIO.Socket} socket - Socket
+   * @returns {void}
+   * @description Handle connection event
+   */
   io.on("connection", (socket) => {
     console.log(`A user connected with socket id: ${socket.id}`);
 
-    // DASHBOARD
+    // LOCATION TRACKING (REAL-TIME)
     socket.on("newLocation", (location) => {
       console.log("User at location:", location.latitude, location.longitude);
       io.emit("newLocation", location); // broadcast to all clients
     });
+
+    // COMMANDS TO DOG (TASKS)
     socket.on("command", async (command, taskId) => {
       console.log(`Received command: ${command}`);
       console.log(`Task ID: ${taskId}`);
@@ -37,7 +52,7 @@ module.exports = function (http) {
       io.emit("command", command); // broadcast to all clients
     });
 
-    // DOG LIST
+    // DOG LIST (REAL-TIME)
     socket.on("dogList", async () => {
       try {
         const dogList = await DogSchema.find({}).populate({
@@ -52,7 +67,7 @@ module.exports = function (http) {
       }
     });
 
-    // HANDLER LIST
+    // HANDLER LIST (REAL-TIME)
     socket.on("handlerList", async () => {
       try {
         const handlerList = await HandlerSchema.find({}).populate({
@@ -67,7 +82,7 @@ module.exports = function (http) {
       }
     });
 
-    // TASK LIST
+    // TASK LIST (REAL-TIME)
     socket.on("taskList", async () => {
       try {
         const taskList = await TaskSchema.find({})
@@ -79,6 +94,7 @@ module.exports = function (http) {
       }
     });
 
+    // CREATE NEW TASK (REAL-TIME)
     socket.on("newTask", async (task) => {
       try {
         console.log(task);
@@ -106,6 +122,7 @@ module.exports = function (http) {
       }
     });
 
+    // DELETE TASK (REAL-TIME)
     socket.on("deleteTask", async (taskId) => {
       try {
         // delete the task
@@ -129,6 +146,7 @@ module.exports = function (http) {
       }
     });
 
+    // FINISH TASK (REAL-TIME)
     socket.on("finishTask", async (task) => {
       try {
         console.log(task);
@@ -149,6 +167,7 @@ module.exports = function (http) {
       }
     });
 
+    // DISCONNECT EVENT
     socket.on("disconnect", () => {
       console.log(`User disconnected with socket id: ${socket.id}`);
     });

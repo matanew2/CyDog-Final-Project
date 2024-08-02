@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+/**
+ * Handler schema
+ * @type {mongoose.Schema}
+ * @property {string} name - Handler's name
+ * @property {string} job - Handler's job
+ * @property {mongoose.Schema.Types.ObjectId[]} tasks - Handler's tasks
+ * @returns {mongoose.Schema} - Handler schema
+ */
 const handlerSchema = new mongoose.Schema({
     // Define your schema fields here
     name: {
@@ -17,6 +25,10 @@ const handlerSchema = new mongoose.Schema({
 
 });
 
+/**
+ * Handler model
+ * @type {mongoose.Model}
+ */
 const Handler = mongoose.model('Handler', handlerSchema);
 
 module.exports = Handler;
