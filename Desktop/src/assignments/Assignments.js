@@ -18,12 +18,10 @@ import PopupVideo from "./VideoWindow";
 // Assignment component
 const Assignment = ({ id, name, dateCreation, dateFinish, handler }) => {
   const deleteTask = (e) => {
-    console.log("Delete icon clicked!");
     e.stopPropagation();
     socket.emit("deleteTask", id); // trigger -> Request dog list from the server
     socket.on("deleteTask", (newTask) => {
       // listen -> Receive dog list from the server
-      console.log("task deleted", newTask);
       socket.emit("taskList"); //
     });
   };
@@ -72,11 +70,10 @@ const Assignments = () => {
   const [selectHandler, setSelectHandler] = useState({});
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
-  const { setCreatedTask, currentTask, setCurrentTask, currentUser, setMessage } = useAuth();
+  const { setCreatedTask, setCurrentTask, currentUser, setMessage } = useAuth();
   const [recordingLink] = useState("http://localhost:8000/public/videos/");
 
   const getAssignments = () => {
-    console.log("Requesting task list");
     socket.emit("taskList"); // trigger -> Request dog list from the server
 
     socket.on("taskList", (taskList) => {
@@ -90,25 +87,20 @@ const Assignments = () => {
   }, []);
 
   const addTask = () => {
-    console.log("Add task button clicked!");
     setOpenAddTask(true);
     socket.emit("dogList");
     socket.on("dogList", (dogList) => {
-      console.log("Received dog list", dogList);
       setDogList(dogList);
     });
 
     socket.emit("handlerList");
     socket.on("handlerList", (handlerList) => {
-      console.log("Received handler list", handlerList);
       setHandlerList(handlerList);
     });
   };
 
   const startTask = () => {
-    console.log("Start task button clicked!");
     setOpenAddTask(false);
-    console.log(taskName, selectDog, selectHandler, description);
     if (!taskName || !selectDog || !selectHandler || !description) {
       setMessage("Please fill in all fields.");
       return;
@@ -123,12 +115,10 @@ const Assignments = () => {
     socket.emit("newTask", task); // trigger -> Request dog list from the server
     socket.on("newTask", (newTask) => {
       // listen -> Receive dog list from the server
-      console.log("Received new task", newTask);
       if (newTask) {
         setAssignments([...assignments, newTask]);
         setCreatedTask(true);
         setCurrentTask(newTask);
-        console.log(currentTask);
         navigate(`/profile/${currentUser?.reloadUserInfo?.localId}/dashboard`);
       }
     });

@@ -33,9 +33,18 @@ export default function Dashboard() {
   });
 
   React.useEffect(() => {
-    socket.on("newLocation", (data) => {
+    const handleNewLocation = (data) => {
+      console.log("New location received: ", data);
       setLocation({ latitude: data.latitude, longitude: data.longitude });
-    });
+    };
+
+    socket.on("newLocation", handleNewLocation);
+    const intervalId = setInterval(5000); // Request new location every 5 seconds
+
+    return () => {
+      clearInterval(intervalId); // Clear the interval on component unmount
+      socket.off("newLocation", handleNewLocation); // Clean up the socket listener
+    };
   }, []);
 
   return (
@@ -57,7 +66,7 @@ export default function Dashboard() {
                   width: "100%",
                 }}
               >
-                <Map currentTask={currentTask} setCurrentTask={setCurrentTask} location={location} />
+                <Map setCurrentTask={setCurrentTask} location={location} />
               </Paper>
     
             </Grid>

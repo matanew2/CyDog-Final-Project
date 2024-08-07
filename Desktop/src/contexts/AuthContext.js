@@ -100,17 +100,17 @@ const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (currentTask.videoName !== "<no video>") {
-      console.log("after recording", currentTask);
-      socket.emit("finishTask", currentTask);
-    }
+    socket.emit("finishTask", currentTask);
+  }, [currentTask]); // Only run when currentTask changes
+
+  useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
     });
 
     return unsubscribe;
-  }, [currentTask]);
+  }, []); // Only run once on mount
 
   const value = {
     currentUser,

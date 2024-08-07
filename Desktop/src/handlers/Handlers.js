@@ -175,7 +175,7 @@ const Handlers = () => {
               variant="h5"
               sx={{ textAlign: "left", ml: 2, color: "white" }}
             >
-              Assignments:
+              {!selectedHandler ? "No handler selected" : "Tasks:"}
               {selectedHandler?.tasks?.length > 0 ? (
                   <List >
                     {selectedHandler?.tasks.map((assignment) => (
@@ -232,7 +232,7 @@ const Handlers = () => {
                   variant="h6"
                   sx={{ textAlign: "left", ml: 2, color: "white" }}
                 >
-                  No assignment
+                  {!selectedHandler ? "Select a handler to view tasks" : "No tasks"}
                 </Typography>
               )}
             </Typography>

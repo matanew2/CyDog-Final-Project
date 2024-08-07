@@ -1,80 +1,99 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { CircularProgress, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 
-const MapComponent = ({ currentTask, setCurrentTask, location }) => {
+const MapComponent = ({ setCurrentTask, location }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
-  const polylineRef = useRef(null);
   const locationsRef = useRef([]);
+  const [locationLoaded, setLocationLoaded] = useState(false);
 
   useEffect(() => {
-    const mapOptions = {
-      center: [location.latitude, location.longitude],
-      zoom: 10,
-    };
+    if (!mapRef.current) {
+      const mapOptions = {
+        center: [location.latitude, location.longitude],
+        zoom: 10,
+      };
 
-    mapRef.current = L.map("map", mapOptions);
+      mapRef.current = L.map("map", mapOptions);
 
-    const layer = L.tileLayer(
-      "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    );
+      const layer = L.tileLayer(
+        "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      );
 
-    mapRef.current.addLayer(layer);
+      mapRef.current.addLayer(layer);
 
-    var myIcon = L.icon({
-      iconUrl:
-        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // URL to your icon image
-      iconSize: [25, 41],
-    });
+      const myIcon = L.icon({
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // URL to your icon image
+        iconSize: [25, 41],
+      });
 
-    markerRef.current = L.marker([location.latitude, location.longitude], {
-      icon: myIcon,
-    }).addTo(mapRef.current);
+      markerRef.current = L.marker([location.latitude, location.longitude], {
+        icon: myIcon,
+      }).addTo(mapRef.current);
 
-    // Initialize polyline
-    polylineRef.current = L.polyline([], { color: "green", weight: 10 }).addTo(
-      mapRef.current
-    );
+      setLocationLoaded(true);
 
-    return () => {
-      mapRef.current.remove();
-    };
-  }, [location]); // This effect runs once after the initial render
+      return () => {
+        if (mapRef.current) {
+          mapRef.current.remove();
+          mapRef.current = null;
+        }
+      };
+    }
+  }, [location]);
 
   useEffect(() => {
-    if (
-      markerRef.current &&
-      !(location.latitude === 0 && location.longitude === 0)
-    ) {
+    if (locationLoaded) {
       markerRef.current.setLatLng([location.latitude, location.longitude]);
       mapRef.current.setView([location.latitude, location.longitude], 16); // Adjust the zoom level here
 
       // Add new location to locations array
       locationsRef.current.push([location.latitude, location.longitude]);
 
-      // Redraw polyline with new locations
-      polylineRef.current.setLatLngs(locationsRef.current);
-
-      console.log(locationsRef.current);
       // Update currentTask with new locations
-      setCurrentTask({
-        ...currentTask,
-        locations: locationsRef.current,
-      });
+      setCurrentTask((prevTask) => ({
+        ...prevTask,
+        locations: [...locationsRef.current],
+      }));
     }
-  }, [setCurrentTask, currentTask, location.latitude, location.longitude]);
+  }, [location.latitude, location.longitude, locationLoaded, setCurrentTask]);
 
   return (
-    <div
-      id="map"
-      style={{
-        width: "100%",
-        height: "100%",
-        border: "1px solid #303030",
-        borderRadius: "10px",
-      }}
-    />
+    <Box
+      position="relative"
+      width="100%"
+      height="100%"
+      border={1}
+      borderColor="#303030"
+      borderRadius="10px"
+    >
+      <div
+        id="map"
+        style={{
+          width: "100%",
+          height: "100%",
+          pointerEvents: locationLoaded ? "auto" : "none", // Disable pointer events if location is not loaded
+        }}
+      />
+      {!locationLoaded && ( // Only render CircularProgress and Typography if location is not loaded
+        <Box
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+          }}
+        >
+          <CircularProgress />
+          <Typography variant="h6">Loading Map...</Typography>
+        </Box>
+      )}
+    </Box>
   );
 };
 

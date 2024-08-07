@@ -21,7 +21,6 @@ import ConfirmMessage from "../error/ConfirmMessage";
  * @description Camera component for recording video
  */
 function Camera({
-  setMessage,
   currentTask,
   setCurrentTask,
   currentUser,
@@ -60,6 +59,7 @@ function Camera({
         });
     }
   }, []);
+  
   const handleStartRecording = () => {
     setRecording(true);
     mediaRecorderRef.current = new MediaRecorder(videoRef.current.srcObject, {
@@ -80,7 +80,6 @@ function Camera({
     if (mediaRecorderRef?.current?.state !== "recording") {
       return;
     }
-
     mediaRecorderRef.current.stop();
     setRecording(false);
 
