@@ -1,5 +1,5 @@
 // LocationManager.js
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as Location from "expo-location";
 
 /**
