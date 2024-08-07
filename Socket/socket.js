@@ -149,7 +149,6 @@ module.exports = function (http) {
     // FINISH TASK (REAL-TIME)
     socket.on("finishTask", async (task) => {
       try {
-        console.log(task);
         // finish the task
         if (task && task._id && task.videoName) {
           const finishedTask = await TaskSchema.findByIdAndUpdate(
@@ -157,7 +156,6 @@ module.exports = function (http) {
             { videoName: task.videoName, dueDate: new Date() },
             { new: true } // this option returns the updated document
           );        
-          console.log(finishedTask);
           io.emit("finishTask", finishedTask); // broadcast to all clients
         } else {
           console.log("Error: Task not found");
