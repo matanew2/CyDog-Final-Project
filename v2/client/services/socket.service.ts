@@ -3,7 +3,7 @@ const IS_PREVIEW =
   typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
     window.location.hostname.includes("vercel.app") ||
-    window.location.hostname.includes("preview"))
+    window.location.hostname.includes("preview"));
 
 // Event types for socket communication
 export enum SocketEvent {
@@ -37,127 +37,129 @@ export enum SocketEvent {
 
 // Location update type
 export type LocationUpdate = {
-  dogId: string
-  latitude: number
-  longitude: number
-  timestamp: number
-  accuracy?: number
-  speed?: number
-  heading?: number
-}
+  dogId: string;
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
+};
 
 // Command type
 export type DogCommand = {
-  dogId: string
-  command: string
-  params?: Record<string, any>
-  timestamp: number
-}
+  dogId: string;
+  command: string;
+  params?: Record<string, any>;
+  timestamp: number;
+};
 
 // Command response type
 export type CommandResponse = {
-  dogId: string
-  commandId: string
-  success: boolean
-  message?: string
-  timestamp: number
-}
+  dogId: string;
+  commandId: string;
+  success: boolean;
+  message?: string;
+  timestamp: number;
+};
 
 // Event listener type
-type EventListener = (...args: any[]) => void
+type EventListener = (...args: any[]) => void;
 
 /**
  * Socket service class
  */
 class SocketService {
-  private socket: WebSocket | null = null
-  private url: string
-  private connected = false
-  private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
-  private reconnectTimeout = 1000
-  private eventListeners: Map<string, EventListener[]> = new Map()
-  private authToken: string | null = null
+  private socket: WebSocket | null = null;
+  private url: string;
+  private connected = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeout = 1000;
+  private eventListeners: Map<string, EventListener[]> = new Map();
+  private authToken: string | null = null;
 
-  constructor(url: string = process.env.NEXT_PUBLIC_SOCKET_URL || "wss://socket.cydog.com") {
-    this.url = url
+  constructor(
+    url: string = process.env.NEXT_PUBLIC_SOCKET_URL || "wss://socket.cydog.com"
+  ) {
+    this.url = url;
   }
 
   /**
    * Initialize the socket connection
    */
   public init(token: string): Promise<void> {
-    this.authToken = token
+    this.authToken = token;
 
     // Skip actual connection in preview mode
     if (IS_PREVIEW) {
-      console.log("Running in preview mode - using mock socket connection")
-      this.connected = true
-      return Promise.resolve()
+      console.log("Running in preview mode - using mock socket connection");
+      this.connected = true;
+      return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
       try {
         // Close existing connection if any
         if (this.socket) {
-          this.socket.close()
+          this.socket.close();
         }
 
         // Create new WebSocket connection
-        this.socket = new WebSocket(this.url)
+        this.socket = new WebSocket(this.url);
 
         // Set up event handlers
         this.socket.onopen = () => {
-          console.log("Socket connection established")
-          this.connected = true
-          this.reconnectAttempts = 0
+          console.log("Socket connection established");
+          this.connected = true;
+          this.reconnectAttempts = 0;
 
           // Authenticate with the server
           this.authenticate(token)
             .then(() => resolve())
-            .catch(reject)
+            .catch(reject);
 
           // Emit connect event
-          this.emit(SocketEvent.CONNECT)
-        }
+          this.emit(SocketEvent.CONNECT);
+        };
 
         this.socket.onclose = (event) => {
-          console.log("Socket connection closed", event)
-          this.connected = false
+          console.log("Socket connection closed", event);
+          this.connected = false;
 
           // Emit disconnect event
-          this.emit(SocketEvent.DISCONNECT, event)
+          this.emit(SocketEvent.DISCONNECT, event);
 
           // Attempt to reconnect
-          this.attemptReconnect()
-        }
+          this.attemptReconnect();
+        };
 
         this.socket.onerror = (error) => {
-          console.error("Socket error:", error)
+          console.error("Socket error:", error);
 
           // Emit error event
-          this.emit(SocketEvent.ERROR, error)
+          this.emit(SocketEvent.ERROR, error);
 
-          reject(error)
-        }
+          reject(error);
+        };
 
         this.socket.onmessage = (event) => {
           try {
-            const data = JSON.parse(event.data)
+            const data = JSON.parse(event.data);
 
             // Handle the message based on its type
             if (data.type && data.payload) {
-              this.emit(data.type, data.payload)
+              this.emit(data.type, data.payload);
             }
           } catch (error) {
-            console.error("Error parsing socket message:", error)
+            console.error("Error parsing socket message:", error);
           }
-        }
+        };
       } catch (error) {
-        console.error("Error initializing socket:", error)
-        reject(error)
+        console.error("Error initializing socket:", error);
+        reject(error);
       }
-    })
+    });
   }
 
   /**
@@ -168,39 +170,39 @@ class SocketService {
     if (IS_PREVIEW) {
       return new Promise((resolve) => {
         setTimeout(() => {
-          this.emit(SocketEvent.AUTHENTICATION_SUCCESS, {})
-          resolve()
-        }, 100)
-      })
+          this.emit(SocketEvent.AUTHENTICATION_SUCCESS, {});
+          resolve();
+        }, 100);
+      });
     }
 
     return new Promise((resolve, reject) => {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-        reject(new Error("Socket not connected"))
-        return
+        reject(new Error("Socket not connected"));
+        return;
       }
 
       // Set up authentication success listener
       const successListener = () => {
-        this.off(SocketEvent.AUTHENTICATION_SUCCESS, successListener)
-        this.off(SocketEvent.AUTHENTICATION_ERROR, errorListener)
-        resolve()
-      }
+        this.off(SocketEvent.AUTHENTICATION_SUCCESS, successListener);
+        this.off(SocketEvent.AUTHENTICATION_ERROR, errorListener);
+        resolve();
+      };
 
       // Set up authentication error listener
       const errorListener = (error: any) => {
-        this.off(SocketEvent.AUTHENTICATION_SUCCESS, successListener)
-        this.off(SocketEvent.AUTHENTICATION_ERROR, errorListener)
-        reject(error)
-      }
+        this.off(SocketEvent.AUTHENTICATION_SUCCESS, successListener);
+        this.off(SocketEvent.AUTHENTICATION_ERROR, errorListener);
+        reject(error);
+      };
 
       // Register listeners
-      this.on(SocketEvent.AUTHENTICATION_SUCCESS, successListener)
-      this.on(SocketEvent.AUTHENTICATION_ERROR, errorListener)
+      this.on(SocketEvent.AUTHENTICATION_SUCCESS, successListener);
+      this.on(SocketEvent.AUTHENTICATION_ERROR, errorListener);
 
       // Send authentication message
-      this.send(SocketEvent.AUTHENTICATE, { token })
-    })
+      this.send(SocketEvent.AUTHENTICATE, { token });
+    });
   }
 
   /**
@@ -208,24 +210,25 @@ class SocketService {
    */
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error("Max reconnect attempts reached")
-      return
+      console.error("Max reconnect attempts reached");
+      return;
     }
 
-    this.reconnectAttempts++
-    const timeout = this.reconnectTimeout * Math.pow(2, this.reconnectAttempts - 1)
+    this.reconnectAttempts++;
+    const timeout =
+      this.reconnectTimeout * Math.pow(2, this.reconnectAttempts - 1);
 
     console.log(
-      `Attempting to reconnect in ${timeout}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
-    )
+      `Attempting to reconnect in ${timeout}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+    );
 
     setTimeout(() => {
       if (!this.connected && this.authToken) {
         this.init(this.authToken).catch((error) => {
-          console.error("Reconnect failed:", error)
-        })
+          console.error("Reconnect failed:", error);
+        });
       }
-    }, timeout)
+    }, timeout);
   }
 
   /**
@@ -234,7 +237,7 @@ class SocketService {
   public send(type: string, payload: any): void {
     // In preview mode, just log the message
     if (IS_PREVIEW) {
-      console.log(`[Mock Socket] Sending message: ${type}`, payload)
+      console.log(`[Mock Socket] Sending message: ${type}`, payload);
 
       // For command responses, simulate a response
       if (type === SocketEvent.DOG_COMMAND) {
@@ -245,24 +248,24 @@ class SocketService {
             success: true,
             message: `Command "${payload.command}" processed successfully`,
             timestamp: Date.now(),
-          })
-        }, 500)
+          });
+        }, 500);
       }
 
-      return
+      return;
     }
 
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      console.error("Cannot send message, socket not connected")
-      return
+      console.error("Cannot send message, socket not connected");
+      return;
     }
 
     const message = JSON.stringify({
       type,
       payload,
-    })
+    });
 
-    this.socket.send(message)
+    this.socket.send(message);
   }
 
   /**
@@ -270,10 +273,10 @@ class SocketService {
    */
   public on(event: string, listener: EventListener): void {
     if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, [])
+      this.eventListeners.set(event, []);
     }
 
-    this.eventListeners.get(event)?.push(listener)
+    this.eventListeners.get(event)?.push(listener);
   }
 
   /**
@@ -281,14 +284,14 @@ class SocketService {
    */
   public off(event: string, listener: EventListener): void {
     if (!this.eventListeners.has(event)) {
-      return
+      return;
     }
 
-    const listeners = this.eventListeners.get(event)
+    const listeners = this.eventListeners.get(event);
     if (listeners) {
-      const index = listeners.indexOf(listener)
+      const index = listeners.indexOf(listener);
       if (index !== -1) {
-        listeners.splice(index, 1)
+        listeners.splice(index, 1);
       }
     }
   }
@@ -298,18 +301,18 @@ class SocketService {
    */
   private emit(event: string, ...args: any[]): void {
     if (!this.eventListeners.has(event)) {
-      return
+      return;
     }
 
-    const listeners = this.eventListeners.get(event)
+    const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.forEach((listener) => {
         try {
-          listener(...args)
+          listener(...args);
         } catch (error) {
-          console.error(`Error in listener for event ${event}:`, error)
+          console.error(`Error in listener for event ${event}:`, error);
         }
-      })
+      });
     }
   }
 
@@ -317,21 +320,21 @@ class SocketService {
    * Send a command to a dog
    */
   public sendDogCommand(command: DogCommand): void {
-    this.send(SocketEvent.DOG_COMMAND, command)
+    this.send(SocketEvent.DOG_COMMAND, command);
   }
 
   /**
    * Start video streaming for a dog
    */
   public startVideoStream(dogId: string): void {
-    this.send(SocketEvent.VIDEO_STREAM_START, { dogId })
+    this.send(SocketEvent.VIDEO_STREAM_START, { dogId });
   }
 
   /**
    * Stop video streaming for a dog
    */
   public stopVideoStream(dogId: string): void {
-    this.send(SocketEvent.VIDEO_STREAM_STOP, { dogId })
+    this.send(SocketEvent.VIDEO_STREAM_STOP, { dogId });
   }
 
   /**
@@ -343,7 +346,7 @@ class SocketService {
     this.send(SocketEvent.AUDIO_DATA, {
       dogId,
       audioData: btoa(String.fromCharCode(...new Uint8Array(audioData))),
-    })
+    });
   }
 
   /**
@@ -351,10 +354,10 @@ class SocketService {
    */
   public disconnect(): void {
     if (this.socket) {
-      this.socket.close()
-      this.socket = null
-      this.connected = false
-      this.authToken = null
+      this.socket.close();
+      this.socket = null;
+      this.connected = false;
+      this.authToken = null;
     }
   }
 
@@ -362,10 +365,10 @@ class SocketService {
    * Check if socket is connected
    */
   public isConnected(): boolean {
-    return this.connected
+    return this.connected;
   }
 }
 
 // Create and export a singleton instance
-const socketService = new SocketService()
-export default socketService
+const socketService = new SocketService();
+export default socketService;
