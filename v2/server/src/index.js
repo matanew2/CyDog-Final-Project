@@ -8,6 +8,7 @@ const sequelize = require("./config/db");
 const initSocket = require("./socket");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const path = require("path");
 
 // Security packages
 let helmet, rateLimit;
@@ -36,20 +37,22 @@ const server = http.createServer(app);
 // Security headers
 app.use(helmet());
 
-// Rate limiting
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many requests, please try again later." },
-});
+// Rate limiting (commented out as in original)
+// const apiLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per window
+//   standardHeaders: true,
+//   legacyHeaders: false,
+//   message: { error: "Too many requests, please try again later." },
+// });
+// app.use(apiLimiter);
 
-app.use(apiLimiter);
+// Serve static files for uploads
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "*",
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   credentials: true,

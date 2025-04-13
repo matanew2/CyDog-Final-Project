@@ -1,6 +1,22 @@
 const express = require("express");
-const router = express.Router();
+const path = require("path");
+const multer = require("multer");
 const dogsController = require("../controllers/dogs");
+
+const router = express.Router();
+
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/dogs/");
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
+  },
+});
+
+const upload = multer({ storage });
 
 /**
  * @swagger
@@ -28,10 +44,6 @@ const dogsController = require("../controllers/dogs");
  *         image:
  *           type: string
  *           description: URL or path to the dog's image (optional)
- *         userId:
- *           type: string
- *           format: uuid
- *           description: ID of the user associated with the dog
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -45,7 +57,6 @@ const dogsController = require("../controllers/dogs");
  *         - breed
  *         - age
  *         - type
- *         - userId
  *         - createdAt
  *         - updatedAt
  */
@@ -120,7 +131,7 @@ router.get("/:id", dogsController.getDogById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -138,7 +149,8 @@ router.get("/:id", dogsController.getDogById);
  *                 description: Type or category of the dog
  *               image:
  *                 type: string
- *                 description: URL or path to the dog's image (optional)
+ *                 format: binary
+ *                 description: Image file for the dog (optional)
  *             required:
  *               - name
  *               - breed
@@ -156,7 +168,7 @@ router.get("/:id", dogsController.getDogById);
  *       500:
  *         description: Internal server error
  */
-router.post("/", dogsController.createDog);
+router.post("/", upload.single("image"), dogsController.createDog);
 
 /**
  * @swagger
@@ -175,29 +187,22 @@ router.post("/", dogsController.createDog);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *                 description: Name of the dog
  *               breed:
  *                 type: string
- *                 description: Breed of the dog
  *               age:
  *                 type: integer
- *                 description: Age of the dog in years
  *               type:
  *                 type: string
- *                 description: Type or category of the dog
  *               image:
  *                 type: string
- *                 description: URL or path to the dog's image (optional)
- *               userId:
- *                 type: string
- *                 format: uuid
- *                 description: ID of the user associated with the dog
+ *                 format: binary
+ *                 description: New image file (optional)
  *     responses:
  *       200:
  *         description: Dog updated successfully
@@ -212,7 +217,7 @@ router.post("/", dogsController.createDog);
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", dogsController.updateDog);
+router.put("/:id", upload.single("image"), dogsController.updateDog);
 
 /**
  * @swagger

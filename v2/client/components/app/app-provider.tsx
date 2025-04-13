@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/components/auth/auth-provider";
 import { API, socketService, SocketEvent } from "@/services";
+import { v4 as uuidv4 } from "uuid";
 
 // Types
 export interface Dog {
@@ -20,32 +21,26 @@ export interface Dog {
   age: number;
   type: string;
   image?: string;
-  handlerId?: string;
 }
-export interface Handler {
-  id: string;
-  name: string;
-  jobTitle: string;
-  image?: string;
-}
+
 export interface Assignment {
   id: string;
   type: string;
   dogId: string;
-  handlerId: string;
+  handlerId: string; // This will map to userId on the server
   status: "Active" | "Completed" | "Pending";
   createdAt: string;
   completedAt?: string;
   description?: string;
 }
+
 // App context type
 interface AppContextType {
   dogs: Dog[];
-  handlers: Handler[];
+  users: User[];
   assignments: Assignment[];
   activeDogs: Dog[];
-  addDog: (dog: Omit<Dog, "id">) => Promise<void>;
-  addHandler: (handler: Omit<Handler, "id">) => Promise<void>;
+  addDog: (dog: Dog | Omit<Dog, "id">, imageFile?: File) => Promise<Dog>;
   addAssignment: (
     assignment: Omit<Assignment, "id" | "createdAt">
   ) => Promise<void>;
@@ -54,10 +49,10 @@ interface AppContextType {
     status: Assignment["status"]
   ) => Promise<void>;
   getDogById: (id: string) => Dog | undefined;
-  getHandlerById: (id: string) => Handler | undefined;
+  getUserById: (id: string) => User | undefined;
   getAssignmentById: (id: string) => Assignment | undefined;
   getAssignmentsByDogId: (dogId: string) => Assignment[];
-  getAssignmentsByHandlerId: (handlerId: string) => Assignment[];
+  getAssignmentsByUserId: (userId: string) => Assignment[];
   isLoading: boolean;
   refreshData: () => Promise<void>;
 }
@@ -65,103 +60,13 @@ interface AppContextType {
 // Create app context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Mock data
-const mockDogs: Dog[] = [
-  {
-    id: "1203978120381",
-    name: "Marvin",
-    breed: "Golden Retriever",
-    age: 3,
-    type: "Search & Rescue",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "1203978120382",
-    name: "Rex",
-    breed: "German Shepherd",
-    age: 4,
-    type: "Search & Rescue",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "1203978120383",
-    name: "Bella",
-    breed: "Border Collie",
-    age: 2,
-    type: "Search & Rescue",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "1203978120384",
-    name: "Max",
-    breed: "Labrador Retriever",
-    age: 5,
-    type: "Search & Rescue",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-];
-const mockHandlers: Handler[] = [
-  {
-    id: "202312211",
-    name: "Daniela Vardi",
-    jobTitle: "Senior Handler",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "202312212",
-    name: "John Smith",
-    jobTitle: "Handler",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "202312213",
-    name: "Emma Johnson",
-    jobTitle: "Junior Handler",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-];
-const mockAssignments: Assignment[] = [
-  {
-    id: "assignment1",
-    type: "Search & Rescue",
-    dogId: "1203978120381",
-    handlerId: "202312211",
-    status: "Active",
-    createdAt: "24/01/24 - 13:03",
-    description:
-      "Urban search for a missing person. Searching abandoned buildings and construction sites. Dog must navigate through debris and tight spaces. Ui amet ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.",
-  },
-  {
-    id: "assignment2",
-    type: "Search & Rescue",
-    dogId: "1203978120382",
-    handlerId: "202312212",
-    status: "Active",
-    createdAt: "24/01/24 - 13:04",
-  },
-  {
-    id: "assignment3",
-    type: "Search & Rescue",
-    dogId: "1203978120383",
-    handlerId: "202312213",
-    status: "Pending",
-    createdAt: "24/01/24 - 13:05",
-  },
-  {
-    id: "assignment4",
-    type: "Search & Rescue",
-    dogId: "1203978120381",
-    handlerId: "202312211",
-    status: "Completed",
-    createdAt: "23/01/24 - 10:30",
-    completedAt: "23/01/24 - 14:45",
-  },
-];
+// Importing User type from auth-provider
+import { User } from "@/components/auth/auth-provider";
 
 // App provider component
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [dogs, setDogs] = useState<Dog[]>([]); // Start with empty array
-  const [handlers, setHandlers] = useState<Handler[]>([]);
+  const [dogs, setDogs] = useState<Dog[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -171,12 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Initialize data and socket connection
   useEffect(() => {
     if (user) {
-      refreshData().then(() => {
-        // This ensures we set data to mock data if the API fails
-        if (!Array.isArray(dogs) || dogs.length === 0) setDogs(mockDogs);
-        if (!Array.isArray(handlers) || handlers.length === 0) setHandlers(mockHandlers);
-        if (!Array.isArray(assignments) || assignments.length === 0) setAssignments(mockAssignments);
-      });
+      refreshData();
 
       // Initialize socket connection
       const token = localStorage.getItem("auth_token");
@@ -214,20 +114,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Add error handling for socket connection
     socketService.on(SocketEvent.ERROR, (error) => {
       console.error("Socket connection error:", error);
-      // Don't show toast for socket errors in preview environment
-      // as they're expected when running in a restricted environment
     });
 
     // Listen for dog location updates
     socketService.on(SocketEvent.DOG_LOCATION_UPDATE, (data) => {
       console.log("Dog location update:", data);
-      // In a real app, we would update the dog's location in state
     });
 
     // Listen for dog status updates
     socketService.on(SocketEvent.DOG_STATUS_UPDATE, (data) => {
       console.log("Dog status update:", data);
-      // Update dog status in state
     });
 
     // Listen for command responses
@@ -248,93 +144,113 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshData();
     });
   };
+
   // Refresh all data from API
   const refreshData = async () => {
     setIsLoading(true);
     try {
-      // In a real app, we would fetch data from the API
-      // For now, we'll use mock data with a delay to simulate API calls
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Fetch dogs
-      try {
-        const dogsResponse = await API.dogs.getAllDogs();
-        if (
-          dogsResponse &&
-          dogsResponse.data &&
-          Array.isArray(dogsResponse.data)
-        ) {
-          setDogs(dogsResponse.data);
-        } else {
-          // Fallback to mock data
-          setDogs(mockDogs);
-        }
-      } catch (error) {
-        console.error("Error fetching dogs:", error);
-        setDogs(mockDogs);
-      }
-
-      // Fetch handlers
-      try {
-        const handlersResponse = await API.handlers.getAllHandlers();
-        if (
-          handlersResponse &&
-          handlersResponse.data &&
-          Array.isArray(handlersResponse.data)
-        ) {
-          setHandlers(handlersResponse.data);
-        } else {
-          // Fallback to mock data
-          setHandlers(mockHandlers);
-        }
-      } catch (error) {
-        console.error("Error fetching handlers:", error);
-        setHandlers(mockHandlers);
-      }
-
-      // Fetch assignments
-      try {
-        const assignmentsResponse = await API.assignments.getAllAssignments();
-        if (
-          assignmentsResponse &&
-          assignmentsResponse.data &&
-          Array.isArray(assignmentsResponse.data)
-        ) {
-          setAssignments(assignmentsResponse.data);
-        } else {
-          // Fallback to mock data
-          setAssignments(mockAssignments);
-        }
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-        setAssignments(mockAssignments);
-      }
+      // Try fetching data from API first
+      await fetchDogsData();
+      await fetchUsersData();
+      // await fetchAssignmentsData();
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
         title: "Data Refresh Failed",
         description: "Could not load the latest data. Please try again.",
-        variant: "destructive",
+        variant: "warning",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Fetch dogs data
+  const fetchDogsData = async () => {
+    try {
+      const dogsResponse = await API.dogs.getAllDogs();
+      console.log("Dogs response:", dogsResponse);
+
+      if (dogsResponse?.data && Array.isArray(dogsResponse.data)) {
+        setDogs(dogsResponse.data);
+      } else if (dogsResponse?.data && typeof dogsResponse.data === "object") {
+        console.log("Converting dogs data to array");
+        const dogsArray = dogsResponse.data.data || [dogsResponse.data];
+        setDogs(Array.isArray(dogsArray) ? dogsArray : []);
+      } else {
+        setDogs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching dogs:", error);
+      setDogs([]);
+    }
+  };
+
+  // Fetch users data
+  const fetchUsersData = async () => {
+    try {
+      const usersResponse = await API.auth.getAllUsers();
+      if (usersResponse?.data && Array.isArray(usersResponse.data)) {
+        setUsers(usersResponse.data);
+      } else {
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    }
+  };
+
+  // Fetch assignments data
+  const fetchAssignmentsData = async () => {
+    try {
+      // Try to fetch assignments from the API
+      const assignmentsResponse = await API.assignments.getAllAssignments();
+
+      if (
+        assignmentsResponse?.data &&
+        Array.isArray(assignmentsResponse.data)
+      ) {
+        // Map server-side userId to client-side handlerId
+        const formattedAssignments = assignmentsResponse.data.map(
+          (assignment) => ({
+            ...assignment,
+            handlerId: assignment.userId || assignment.handlerId,
+          })
+        );
+        setAssignments(formattedAssignments);
+      } else {
+        setAssignments([]);
+      }
+    } catch (error) {
+      console.warn("Error fetching assignments:", error);
+      setAssignments([]);
+    }
+  };
+
   // Add a new dog
-  const addDog = async (dog: Omit<Dog, "id">) => {
+  const addDog = async (
+    dog: Dog | Omit<Dog, "id">,
+    imageFile?: File
+  ): Promise<Dog> => {
     setIsLoading(true);
     try {
-      const response = await API.dogs.createDog(dog);
+      const dogWithId: Dog = "id" in dog ? dog : { ...dog, id: uuidv4() };
+
+      const response = await API.dogs.createDog(dog, imageFile);
 
       if (response.data) {
-        setDogs((prev) => [...prev, response.data!]);
+        const addedDog = response.data;
+        setDogs((prev) => [...prev, addedDog]);
+
         toast({
           title: "Dog added",
-          description: `${dog.name} has been added to the system.`,
+          description: `${addedDog.name} has been added to the system.`,
         });
+
+        return addedDog;
       } else {
-        throw new Error(response.error || "Failed to add dog");
+        throw new Error(response.error || "No data returned from server");
       }
     } catch (error) {
       console.error("Error adding dog:", error);
@@ -344,53 +260,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
           error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
-  // Add a new handler
-  const addHandler = async (handler: Omit<Handler, "id">) => {
-    setIsLoading(true);
-    try {
-      const response = await API.handlers.createHandler(handler);
 
-      if (response.data) {
-        setHandlers((prev) => [...prev, response.data!]);
-        toast({
-          title: "Handler added",
-          description: `${handler.name} has been added to the system.`,
-        });
-      } else {
-        throw new Error(response.error || "Failed to add handler");
-      }
-    } catch (error) {
-      console.error("Error adding handler:", error);
-      toast({
-        title: "Failed to add handler",
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
   // Add a new assignment
   const addAssignment = async (
     assignment: Omit<Assignment, "id" | "createdAt">
   ) => {
     setIsLoading(true);
     try {
-      const response = await API.assignments.createAssignment(assignment);
+      const assignmentWithId: Assignment = {
+        ...assignment,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+      };
 
-      if (response.data) {
-        setAssignments((prev) => [...prev, response.data!]);
+      try {
+        const response = await API.assignments.createAssignment(assignment);
+
+        if (response?.data) {
+          // Add handlerId to the returned data to match our client-side model
+          const assignmentWithHandlerId = {
+            ...response.data,
+            handlerId: response.data.userId || assignment.handlerId,
+          };
+          setAssignments((prev) => [...prev, assignmentWithHandlerId]);
+          toast({
+            title: "Assignment created",
+            description: `A new ${assignment.type} assignment has been created.`,
+          });
+        } else {
+          // Don't add assignment if API returns no data
+          toast({
+            title: "Error creating assignment",
+            description: "Server returned an invalid response.",
+            variant: "destructive",
+          });
+          throw new Error("API returned no data");
+        }
+      } catch (apiError) {
+        console.error("API Error creating assignment:", apiError);
+
+        // Don't add assignment to local state
         toast({
-          title: "Assignment created",
-          description: `A new ${assignment.type} assignment has been created.`,
+          title: "Error creating assignment",
+          description: "Could not create assignment due to server error.",
+          variant: "destructive",
         });
-      } else {
-        throw new Error(response.error || "Failed to create assignment");
+
+        throw apiError;
       }
     } catch (error) {
       console.error("Error creating assignment:", error);
@@ -412,23 +333,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      const response = await API.assignments.updateAssignmentStatus(id, status);
+      // Don't update local state first, wait for API response
 
-      if (response.data) {
-        setAssignments((prev) =>
-          prev.map((assignment) => {
-            if (assignment.id === id) {
-              return response.data!;
-            }
-            return assignment;
-          })
+      try {
+        const response = await API.assignments.updateAssignmentStatus(
+          id,
+          status
         );
+
+        if (response?.data) {
+          // Update with server data if available
+          setAssignments((prev) =>
+            prev.map((assignment) => {
+              if (assignment.id === id) {
+                return {
+                  ...response.data!,
+                  handlerId: response.data.userId || assignment.handlerId,
+                };
+              }
+              return assignment;
+            })
+          );
+
+          toast({
+            title: "Assignment updated",
+            description: `Assignment status changed to ${status}.`,
+          });
+        } else {
+          // Don't update if API returns no data
+          toast({
+            title: "Error updating assignment",
+            description: "Server returned an invalid response.",
+            variant: "destructive",
+          });
+          throw new Error("API returned no data");
+        }
+      } catch (apiError) {
+        console.error("API Error updating assignment:", apiError);
+
+        // Don't update locally if API fails
         toast({
-          title: "Assignment updated",
-          description: `Assignment status changed to ${status}.`,
+          title: "Error updating assignment",
+          description: "Could not update assignment due to server error.",
+          variant: "destructive",
         });
-      } else {
-        throw new Error(response.error || "Failed to update assignment");
+
+        throw apiError;
       }
     } catch (error) {
       console.error("Error updating assignment:", error);
@@ -447,23 +397,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getDogById = (id: string) => {
     return dogs.find((dog) => dog.id === id);
   };
-  // Get handler by ID
-  const getHandlerById = (id: string) => {
-    return handlers.find((handler) => handler.id === id);
+
+  // Get user by ID (replaces getHandlerById)
+  const getUserById = (id: string) => {
+    return users.find((user) => user.id === id);
   };
+
   // Get assignment by ID
   const getAssignmentById = (id: string) => {
     return assignments.find((assignment) => assignment.id === id);
   };
+
   // Get assignments by dog ID
   const getAssignmentsByDogId = (dogId: string) => {
     return assignments.filter((assignment) => assignment.dogId === dogId);
   };
-  // Get assignments by handler ID
-  const getAssignmentsByHandlerId = (handlerId: string) => {
-    return assignments.filter(
-      (assignment) => assignment.handlerId === handlerId
-    );
+
+  // Get assignments by user ID (replaces getAssignmentsByHandlerId)
+  const getAssignmentsByUserId = (userId: string) => {
+    return assignments.filter((assignment) => assignment.handlerId === userId);
   };
 
   const activeDogs =
@@ -480,18 +432,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         dogs,
-        handlers,
+        users,
         assignments,
         activeDogs,
         addDog,
-        addHandler,
         addAssignment,
         updateAssignmentStatus,
         getDogById,
-        getHandlerById,
+        getUserById,
         getAssignmentById,
         getAssignmentsByDogId,
-        getAssignmentsByHandlerId,
+        getAssignmentsByUserId,
         isLoading,
         refreshData,
       }}

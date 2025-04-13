@@ -1,280 +1,138 @@
-/**
- * API Service
- * Handles all HTTP requests to the backend API
- */
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import type { User } from "@/components/auth/auth-provider";
+import type { Dog, Assignment } from "@/components/app/app-provider";
 
-import type { User } from "@/components/auth/auth-provider"
-import type { Dog, Handler, Assignment } from "@/components/app/app-provider"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.cydog.com";
 
-// Base API URL - would come from environment variables in a real app
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.cydog.com"
+// Axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-// Check if we're in a preview environment
-const IS_PREVIEW =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname.includes("vercel.app") ||
-    window.location.hostname.includes("preview"))
-
-// Request options type
-type RequestOptions = {
-  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
-  headers?: Record<string, string>
-  body?: any
-}
-
-// API response type
-type ApiResponse<T> = {
-  data?: T
-  error?: string
-  status: number
-}
-
-/**
- * Handles API requests with proper error handling and authentication
- */
-async function apiRequest<T>(endpoint: string, options: RequestOptions): Promise<ApiResponse<T>> {
+// Generic request function
+async function apiRequest<T>(
+  endpoint: string,
+  options: AxiosRequestConfig
+): Promise<{ data?: T; error?: string; status: number }> {
   try {
-    // In preview mode, return mock data instead of making actual API calls
-    if (IS_PREVIEW) {
-      console.log(`[Mock API] ${options.method} ${endpoint}`, options.body || "")
-      return {
-        data: {} as T, // This will be overridden by the mock data in the actual API methods
-        status: 200,
-      }
-    }
-
-    // Get auth token from localStorage
-    const token = localStorage.getItem("auth_token")
-
-    // Prepare headers
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...options.headers,
-    }
-
-    // Add auth token if available
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
-
-    // Prepare request body
-    const requestOptions: RequestInit = {
-      method: options.method,
-      headers,
-      credentials: "include", // Include cookies for CSRF protection
-    }
-
-    // Add body for non-GET requests
-    if (options.body && options.method !== "GET") {
-      requestOptions.body = JSON.stringify(options.body)
-    }
-
-    // Make the request
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions)
-
-    // Parse response
-    let data
-    const contentType = response.headers.get("content-type")
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json()
-    } else {
-      data = await response.text()
-    }
-
-    // Handle response
-    if (!response.ok) {
-      return {
-        error: data.message || "An error occurred",
-        status: response.status,
-      }
-    }
-
-    return {
-      data,
-      status: response.status,
-    }
-  } catch (error) {
-    console.error("API request failed:", error)
-    return {
-      error: error instanceof Error ? error.message : "Network error",
-      status: 0,
-    }
+    const response: AxiosResponse<T> = await api(endpoint, options);
+    console.log(`[API] ${options.method} ${endpoint}`, response.data);
+    return { data: response.data, status: response.status };
+  } catch (err: any) {
+    const status = err.response?.status || 500;
+    const error = err.response?.data?.message || err.message || "Unknown error";
+    console.error(`[API Error] ${options.method} ${endpoint}:`, error);
+    return { error, status };
   }
 }
 
-/**
- * Authentication API methods
- */
+// API Services
 export const AuthApi = {
-  login: async (email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> => {
-    return apiRequest("/auth/login", {
+  login: (email: string, password: string) =>
+    apiRequest<{ user: User; token: string }>("/auth/login", {
       method: "POST",
-      body: { email, password },
-    })
-  },
+      data: { email, password },
+    }),
 
-  register: async (
-    name: string,
-    email: string,
-    password: string,
-  ): Promise<ApiResponse<{ user: User; token: string }>> => {
-    return apiRequest("/auth/register", {
+  register: (name: string, email: string, password: string) =>
+    apiRequest<{ user: User; token: string }>("/auth/register", {
       method: "POST",
-      body: { name, email, password },
-    })
-  },
+      data: { name, email, password },
+    }),
 
-  logout: async (): Promise<ApiResponse<void>> => {
-    return apiRequest("/auth/logout", {
-      method: "POST",
-    })
-  },
+  logout: () => apiRequest<void>("/auth/logout", { method: "POST" }),
 
-  getCurrentUser: async (): Promise<ApiResponse<User>> => {
-    return apiRequest("/auth/me", {
-      method: "GET",
-    })
-  },
-}
+  getCurrentUser: () => apiRequest<User>("/auth/me", { method: "GET" }),
 
-/**
- * Dogs API methods
- */
+  getAllUsers: () => apiRequest<User[]>("/auth/all-users", { method: "GET" }),
+};
+
 export const DogsApi = {
-  getAllDogs: async (): Promise<ApiResponse<Dog[]>> => {
-    return apiRequest("/dogs", {
-      method: "GET",
-    })
-  },
+  getAllDogs: () => apiRequest<Dog[]>("/dogs", { method: "GET" }),
 
-  getDogById: async (id: string): Promise<ApiResponse<Dog>> => {
-    return apiRequest(`/dogs/${id}`, {
-      method: "GET",
-    })
-  },
+  getDogById: (id: string) => apiRequest<Dog>(`/dogs/${id}`, { method: "GET" }),
 
-  createDog: async (dog: Omit<Dog, "id">): Promise<ApiResponse<Dog>> => {
-    return apiRequest("/dogs", {
+  createDog: (dog: Omit<Dog, "id">, imageFile?: File) => {
+    const formData = new FormData();
+    formData.append("name", dog.name);
+    formData.append("breed", dog.breed);
+    formData.append("age", String(dog.age));
+    formData.append("type", dog.type);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    return apiRequest<Dog>("/dogs", {
       method: "POST",
-      body: dog,
-    })
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 
-  updateDog: async (id: string, dog: Partial<Dog>): Promise<ApiResponse<Dog>> => {
-    return apiRequest(`/dogs/${id}`, {
+  updateDog: (id: string, dog: Partial<Dog>, imageFile?: File) => {
+    const formData = new FormData();
+    if (dog.name) formData.append("name", dog.name);
+    if (dog.breed) formData.append("breed", dog.breed);
+    if (dog.age !== undefined) formData.append("age", String(dog.age));
+    if (dog.type) formData.append("type", dog.type);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    return apiRequest<Dog>(`/dogs/${id}`, {
       method: "PUT",
-      body: dog,
-    })
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 
-  deleteDog: async (id: string): Promise<ApiResponse<void>> => {
-    return apiRequest(`/dogs/${id}`, {
-      method: "DELETE",
-    })
-  },
+  deleteDog: (id: string) =>
+    apiRequest<void>(`/dogs/${id}`, { method: "DELETE" }),
+};
 
-  getActiveDogs: async (): Promise<ApiResponse<Dog[]>> => {
-    return apiRequest("/dogs/active", {
-      method: "GET",
-    })
-  },
-}
-
-/**
- * Handlers API methods
- */
-export const HandlersApi = {
-  getAllHandlers: async (): Promise<ApiResponse<Handler[]>> => {
-    return apiRequest("/handlers", {
-      method: "GET",
-    })
-  },
-
-  getHandlerById: async (id: string): Promise<ApiResponse<Handler>> => {
-    return apiRequest(`/handlers/${id}`, {
-      method: "GET",
-    })
-  },
-
-  createHandler: async (handler: Omit<Handler, "id">): Promise<ApiResponse<Handler>> => {
-    return apiRequest("/handlers", {
-      method: "POST",
-      body: handler,
-    })
-  },
-
-  updateHandler: async (id: string, handler: Partial<Handler>): Promise<ApiResponse<Handler>> => {
-    return apiRequest(`/handlers/${id}`, {
-      method: "PUT",
-      body: handler,
-    })
-  },
-
-  deleteHandler: async (id: string): Promise<ApiResponse<void>> => {
-    return apiRequest(`/handlers/${id}`, {
-      method: "DELETE",
-    })
-  },
-}
-
-/**
- * Assignments API methods
- */
 export const AssignmentsApi = {
-  getAllAssignments: async (): Promise<ApiResponse<Assignment[]>> => {
-    return apiRequest("/assignments", {
-      method: "GET",
-    })
-  },
+  getAllAssignments: () =>
+    apiRequest<Assignment[]>("/assignments", { method: "GET" }),
 
-  getAssignmentById: async (id: string): Promise<ApiResponse<Assignment>> => {
-    return apiRequest(`/assignments/${id}`, {
-      method: "GET",
-    })
-  },
+  getAssignmentById: (id: string) =>
+    apiRequest<Assignment>(`/assignments/${id}`, { method: "GET" }),
 
-  getAssignmentsByDogId: async (dogId: string): Promise<ApiResponse<Assignment[]>> => {
-    return apiRequest(`/assignments/dog/${dogId}`, {
-      method: "GET",
-    })
-  },
+  getAssignmentsByDogId: (dogId: string) =>
+    apiRequest<Assignment[]>(`/assignments/dog/${dogId}`, { method: "GET" }),
 
-  getAssignmentsByHandlerId: async (handlerId: string): Promise<ApiResponse<Assignment[]>> => {
-    return apiRequest(`/assignments/handler/${handlerId}`, {
-      method: "GET",
-    })
-  },
+  getAssignmentsByUserId: (userId: string) =>
+    apiRequest<Assignment[]>(`/assignments/user/${userId}`, { method: "GET" }),
 
-  createAssignment: async (assignment: Omit<Assignment, "id" | "createdAt">): Promise<ApiResponse<Assignment>> => {
-    return apiRequest("/assignments", {
+  createAssignment: (assignment: Omit<Assignment, "id" | "createdAt">) => {
+    const { handlerId, ...rest } = assignment;
+    return apiRequest<Assignment>("/assignments", {
       method: "POST",
-      body: assignment,
-    })
+      data: { ...rest, userId: handlerId },
+    });
   },
 
-  updateAssignmentStatus: async (id: string, status: Assignment["status"]): Promise<ApiResponse<Assignment>> => {
-    return apiRequest(`/assignments/${id}/status`, {
+  updateAssignmentStatus: (id: string, status: Assignment["status"]) =>
+    apiRequest<Assignment>(`/assignments/${id}`, {
       method: "PATCH",
-      body: { status },
-    })
-  },
+      data: { status },
+    }),
 
-  deleteAssignment: async (id: string): Promise<ApiResponse<void>> => {
-    return apiRequest(`/assignments/${id}`, {
-      method: "DELETE",
-    })
-  },
-}
+  deleteAssignment: (id: string) =>
+    apiRequest<void>(`/assignments/${id}`, { method: "DELETE" }),
+};
 
-/**
- * Export a default API object with all services
- */
+// Export unified API
 const API = {
   auth: AuthApi,
   dogs: DogsApi,
-  handlers: HandlersApi,
   assignments: AssignmentsApi,
-}
+};
 
-export default API
+export default API;
