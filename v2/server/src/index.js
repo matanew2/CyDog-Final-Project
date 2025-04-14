@@ -9,6 +9,15 @@ const initSocket = require("./socket");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const path = require("path");
+const fs = require("fs");
+
+// Import routes
+const authRoutes = require("./routes/auth");
+const dogsRoutes = require("./routes/dogs");
+const assignmentsRoutes = require("./routes/assignments");
+
+// Import models
+const { User, Dog, Assignment } = require("./models");
 
 // Security packages
 let helmet, rateLimit;
@@ -23,42 +32,62 @@ try {
   rateLimit = () => (req, res, next) => next();
 }
 
-// Import routes
-const authRoutes = require("./routes/auth");
-const dogsRoutes = require("./routes/dogs");
-const assignmentsRoutes = require("./routes/assignments");
-
-// Import models
-const { User, Dog, Assignment } = require("./models");
-
 const app = express();
 const server = http.createServer(app);
 
-// Security headers
-app.use(helmet());
-
-// Rate limiting (commented out as in original)
-// const apiLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per window
-//   standardHeaders: true,
-//   legacyHeaders: false,
-//   message: { error: "Too many requests, please try again later." },
-// });
-// app.use(apiLimiter);
-
-// Serve static files for uploads
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
-
-// CORS configuration
+// CORS configuration - Must come before security headers
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000", // Specific origin instead of wildcard
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   credentials: true,
-  maxAge: 86400,
+  exposedHeaders: ["Content-Disposition"],
 };
 app.use(cors(corsOptions));
+
+// Security headers - Configure to allow cross-origin resources
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginOpenerPolicy: false,
+  })
+);
+
+// Create upload directories if they don't exist
+const uploadDir = path.join(__dirname, "public/uploads");
+const dogUploadDir = path.join(__dirname, "public/uploads/dogs");
+
+// Create directories if they don't exist
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("Created uploads directory");
+}
+if (!fs.existsSync(dogUploadDir)) {
+  fs.mkdirSync(dogUploadDir, { recursive: true });
+  console.log("Created dogs upload directory");
+}
+
+// Custom middleware for serving dog images with specific CORS headers
+app.use(
+  "/uploads/dogs",
+  (req, res, next) => {
+    // Match the same origin as in corsOptions
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      process.env.CORS_ORIGIN || "http://localhost:3000"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "public/uploads/dogs"))
+);
+
+// Then serve the general uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Body parser
 app.use(express.json({ limit: "1mb" }));
@@ -94,6 +123,25 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 app.use((req, res, next) => {
   req.requestTime = new Date();
   next();
+});
+
+// Add a debug endpoint to check the file
+app.get("/debug-image/:filename", (req, res) => {
+  const filePath = path.join(
+    __dirname,
+    "public/uploads/dogs",
+    req.params.filename
+  );
+  res.json({
+    fileExists: fs.existsSync(filePath),
+    filePath,
+    fileStats: fs.existsSync(filePath) ? fs.statSync(filePath) : null,
+    headers: {
+      "content-type": "image/jpeg",
+      "access-control-allow-origin":
+        process.env.CORS_ORIGIN || "http://localhost:3000",
+    },
+  });
 });
 
 // Routes
@@ -148,6 +196,9 @@ async function startServer() {
         `API documentation available at http://localhost:${PORT}/api-docs`
       );
       console.log(`Socket.io server running at http://localhost:${PORT}`);
+      console.log(
+        `Dog images accessible at http://localhost:${PORT}/uploads/dogs/[filename]`
+      );
     });
   } catch (error) {
     console.error("Failed to start server:", error);

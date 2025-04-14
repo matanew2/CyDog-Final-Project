@@ -2,21 +2,10 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const dogsController = require("../controllers/dogs");
+const upload = require("../middleware/uploadConfig");
 
+// Create router - This line was missing in the original file
 const router = express.Router();
-
-// Multer storage config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/uploads/dogs/");
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
-  },
-});
-
-const upload = multer({ storage });
 
 /**
  * @swagger

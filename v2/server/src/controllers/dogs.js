@@ -1,7 +1,7 @@
 const Dog = require("../models/dog");
 const User = require("../models/user"); // Assuming you have a User model defined
-
-//TODO: NEED TO ENABLE ACCESS IMAGE FOR DOGS AT LOCALHOST:8080/uploads/dogs/filename.jpg
+const fs = require("fs");
+const path = require("path");
 
 // Get all dogs
 exports.getAllDogs = async (req, res) => {
@@ -42,7 +42,10 @@ exports.createDog = async (req, res) => {
     if (isNaN(ageNumber) || ageNumber <= 0) {
       return res.status(400).json({ error: "Age must be a positive number" });
     }
+
+    // Handle image upload - ensures the path is correctly set
     const imagePath = req.file ? `/uploads/dogs/${req.file.filename}` : null;
+
     const newDog = await Dog.create({
       name,
       breed,
@@ -101,6 +104,8 @@ exports.updateDog = async (req, res) => {
     }
 
     const dog = await Dog.findByPk(req.params.id);
+
+    // Handle image update
     const imagePath = req.file
       ? `/uploads/dogs/${req.file.filename}`
       : dog.image;
@@ -132,6 +137,20 @@ exports.deleteDog = async (req, res) => {
     if (!dog) {
       return res.status(404).json({ error: "Dog not found" });
     }
+
+    // If there's an image, delete it from the filesystem
+    if (dog.image) {
+      try {
+        const imagePath = path.join(__dirname, "..", "public", dog.image);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (err) {
+        console.error("Error deleting image file:", err);
+        // Continue with deletion even if image delete fails
+      }
+    }
+
     await dog.destroy();
     res.status(204).end();
   } catch (error) {
