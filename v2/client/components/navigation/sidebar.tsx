@@ -45,8 +45,8 @@ export function Sidebar() {
     { icon: Dog, label: "Dog List", href: "/dog-list" },
     { icon: Users, label: "Handlers", href: "/handlers" },
     { icon: ClipboardList, label: "Assignments", href: "/assignments" },
-    { icon: Bell, label: "Notifications", href: "/notifications" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    // { icon: Bell, label: "Notifications", href: "/notifications" },
+    // { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
   const toggleTheme = () => {

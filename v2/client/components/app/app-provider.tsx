@@ -44,15 +44,19 @@ interface AppContextType {
   addAssignment: (
     assignment: Omit<Assignment, "id" | "createdAt">
   ) => Promise<void>;
-  updateAssignmentStatus: (
+  updateAssignment: (
     id: string,
-    status: Assignment["status"]
+    assignment: Partial<Assignment>
   ) => Promise<void>;
   getDogById: (id: string) => Dog | undefined;
   getUserById: (id: string) => User | undefined;
   getAssignmentById: (id: string) => Assignment | undefined;
   getAssignmentsByDogId: (dogId: string) => Assignment[];
   getAssignmentsByUserId: (userId: string) => Assignment[];
+  updateAssignmentById: (
+    id: string,
+    status: Assignment["status"]
+  ) => Promise<void>;
   isLoading: boolean;
   refreshData: () => Promise<void>;
 }
@@ -152,7 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Try fetching data from API first
       await fetchDogsData();
       await fetchUsersData();
-      // await fetchAssignmentsData();
+      await fetchAssignmentsData(); // Uncomment this line
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -169,7 +173,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchDogsData = async () => {
     try {
       const dogsResponse = await API.dogs.getAllDogs();
-      console.log("Dogs response:", dogsResponse);
 
       if (dogsResponse?.data && Array.isArray(dogsResponse.data)) {
         setDogs(dogsResponse.data);
@@ -192,6 +195,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const usersResponse = await API.auth.getAllUsers();
       if (usersResponse?.data && Array.isArray(usersResponse.data)) {
         setUsers(usersResponse.data);
+      } else if (
+        usersResponse?.data &&
+        typeof usersResponse.data === "object"
+      ) {
+        console.log("Converting users data to array");
+        const usersArray = usersResponse.data.data || [usersResponse.data];
+        setUsers(Array.isArray(usersArray) ? usersArray : []);
       } else {
         setUsers([]);
       }
@@ -201,7 +211,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fetch assignments data
+  // Fetch assignments data with improved error handling
   const fetchAssignmentsData = async () => {
     try {
       // Try to fetch assignments from the API
@@ -220,11 +230,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         setAssignments(formattedAssignments);
       } else {
+        // Set empty assignments array if no valid data
         setAssignments([]);
       }
     } catch (error) {
-      console.warn("Error fetching assignments:", error);
+      // Handle 404 gracefully - the endpoint might not be set up yet
+      console.warn("Note: Assignments API endpoint returned an error:", error);
+      console.info(
+        "This is expected if the assignments feature is not yet implemented"
+      );
+
+      // Just set empty assignments without showing an error message
       setAssignments([]);
+
+      // Don't rethrow the error to prevent it from breaking the app flow
     }
   };
 
@@ -326,20 +345,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Update assignment status
-  const updateAssignmentStatus = async (
+  // Update assignment
+  const updateAssignment = async (
     id: string,
-    status: Assignment["status"]
+    assignment: Partial<Assignment>
   ) => {
     setIsLoading(true);
     try {
       // Don't update local state first, wait for API response
 
       try {
-        const response = await API.assignments.updateAssignmentStatus(
-          id,
-          status
-        );
+        const response = await API.assignments.updateAssignment(id, assignment);
 
         if (response?.data) {
           // Update with server data if available
@@ -418,6 +434,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return assignments.filter((assignment) => assignment.handlerId === userId);
   };
 
+  // Update assignment status by ID
+  const updateAssignmentById = async (
+    id: string,
+    status: Assignment["status"]
+  ) => {
+    setIsLoading(true);
+    try {
+      const response = await API.assignments.updateAssignment(id, status);
+      if (response?.data) {
+        setAssignments((prev) =>
+          prev.map((assignment) => {
+            if (assignment.id === id) {
+              return { ...assignment, status: response.data.status };
+            }
+            return assignment;
+          })
+        );
+        toast({
+          title: "Assignment updated",
+          description: `Assignment status changed to ${status}.`,
+        });
+      } else {
+        toast({
+          title: "Error updating assignment",
+          description: "Server returned an invalid response.",
+          variant: "destructive",
+        });
+        throw new Error("API returned no data");
+      }
+    } catch (error) {
+      console.error("Error updating assignment:", error);
+      toast({
+        title: "Failed to update assignment",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Current code:
   const activeDogs =
     Array.isArray(dogs) && Array.isArray(assignments)
       ? dogs.filter((dog) => {
@@ -437,7 +496,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeDogs,
         addDog,
         addAssignment,
-        updateAssignmentStatus,
+        updateAssignment,
         getDogById,
         getUserById,
         getAssignmentById,
@@ -445,6 +504,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getAssignmentsByUserId,
         isLoading,
         refreshData,
+        updateAssignmentById,
       }}
     >
       {children}

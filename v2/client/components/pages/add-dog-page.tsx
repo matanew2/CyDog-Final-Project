@@ -91,7 +91,7 @@ export function AddDogPage() {
         title: "Dog added",
         description: `${formData.name} has been added successfully.`,
       });
-      router.push("/dogs");
+      router.push("/dog-list");
     } catch (error) {
       console.error("Error adding dog:", error);
       toast({

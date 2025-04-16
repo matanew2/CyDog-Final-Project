@@ -164,9 +164,9 @@ router.post("/", assignmentsController.createAssignment);
 /**
  * @swagger
  * /assignments/{id}:
- *   patch:
+ *   put:
  *     tags: [Assignments]
- *     summary: Update an existing_assignment
+ *     summary: Update an existing assignment
  *     parameters:
  *       - name: id
  *         in: path
@@ -218,7 +218,7 @@ router.post("/", assignmentsController.createAssignment);
  *       500:
  *         description: Internal server error
  */
-router.patch("/:id", assignmentsController.updateAssignment);
+router.put("/:id", assignmentsController.updateAssignment);
 
 /**
  * @swagger

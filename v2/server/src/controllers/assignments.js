@@ -124,14 +124,17 @@ exports.getAssignmentById = async (req, res) => {
 exports.updateAssignment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, dogId, userId, status, description, completedAt } = req.body;
+    const { type, dogId, userId, status, description } = req.body;
 
-    // Validate assignment ID existence in db
+    console.log("Update assignment request:", req.body);
+
+    // Validate assignment ID existence
     const assignment = await Assignment.findByPk(id);
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
     }
 
+    // Validate status value
     if (status && !["Active", "Completed", "Pending"].includes(status)) {
       return res.status(400).json({ error: "Invalid status value" });
     }
@@ -144,28 +147,42 @@ exports.updateAssignment = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // Prepare update data
     const updateData = {};
     if (type) updateData.type = type;
     if (dogId) updateData.dogId = dogId;
     if (userId) updateData.userId = userId;
-    if (status) updateData.status = status;
     if (description !== undefined) updateData.description = description;
-    if (completedAt !== undefined) updateData.completedAt = completedAt;
 
-    const [affectedRows, [updatedAssignment]] = await Assignment.update(
-      updateData,
-      {
-        where: { id },
-        returning: true,
+    // Special handling for status changes
+    if (status) {
+      updateData.status = status;
+
+      // Auto-set completedAt when status changes to Completed
+      if (status === "Completed" && assignment.status !== "Completed") {
+        updateData.completedAt = new Date().toISOString();
       }
-    );
 
-    if (affectedRows === 0) {
-      return res.status(404).json({ error: "Assignment not found" });
+      // Clear completedAt when changing from Completed to another status
+      if (status !== "Completed" && assignment.status === "Completed") {
+        updateData.completedAt = null;
+      }
     }
+
+    // Update the assignment
+    await Assignment.update(updateData, { where: { id } });
+
+    // Fetch the updated assignment to return complete data
+    const updatedAssignment = await Assignment.findByPk(id, {
+      include: [
+        { model: Dog, attributes: ["id", "name"] },
+        { model: User, attributes: ["id", "name"] },
+      ],
+    });
 
     res.status(200).json(updatedAssignment);
   } catch (error) {
+    console.error("Update assignment error:", error);
     res.status(400).json({
       error: "Failed to update assignment",
       details: error.message,

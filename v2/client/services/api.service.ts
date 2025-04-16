@@ -118,10 +118,10 @@ export const AssignmentsApi = {
     });
   },
 
-  updateAssignmentStatus: (id: string, status: Assignment["status"]) =>
+  updateAssignment: (id: string, assignment: Partial<Assignment>) =>
     apiRequest<Assignment>(`/assignments/${id}`, {
-      method: "PATCH",
-      data: { status },
+      method: "PUT",
+      data: assignment,
     }),
 
   deleteAssignment: (id: string) =>

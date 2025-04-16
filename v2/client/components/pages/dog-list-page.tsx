@@ -18,6 +18,7 @@ import { Search, Plus, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { getImageUrl, BACKEND_URL } from "@/utils/ImageProcess";
 
 export function DogListPage() {
   const { dogs, activeDogs, getAssignmentsByDogId, refreshData } = useApp();
@@ -26,10 +27,6 @@ export function DogListPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filterType, setFilterType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Base URL for backend (API and static files)
-  const BACKEND_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
 
   // Debug logging to check what's happening with dogs
   const isInitialMount = useRef(true);
@@ -107,21 +104,6 @@ export function DogListPage() {
     refreshData().finally(() => {
       setIsLoading(false);
     });
-  };
-
-  // Construct full image URL
-  const getImageUrl = (imagePath?: string) => {
-    if (!imagePath) {
-      console.log("No image path provided, using placeholder");
-      return "/placeholder.svg";
-    }
-    const cleanPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
-    const fullPath = cleanPath.startsWith("uploads/dogs/")
-      ? cleanPath
-      : `uploads/dogs/${cleanPath}`;
-    const imageUrl = `${BACKEND_URL}/${fullPath}`;
-    console.log("Generated Image URL:", imageUrl);
-    return imageUrl;
   };
 
   return (
