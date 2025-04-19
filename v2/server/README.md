@@ -3,6 +3,7 @@
 This is the backend server for the CyDog project, a web application designed to manage dogs, users, and assignments. The server is built with Node.js, Express, and Sequelize, using PostgreSQL as the database. It supports RESTful APIs, WebSocket communication via Socket.IO, and Swagger documentation. The application is containerized using Docker and Docker Compose for easy deployment.
 
 ## Table of Contents
+
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Project Structure](#project-structure)
@@ -20,6 +21,7 @@ This is the backend server for the CyDog project, a web application designed to 
 - [License](#license)
 
 ## Features
+
 - **RESTful APIs**: Endpoints for authentication (`/auth`), dog management (`/dogs`), and assignments (`/assignments`).
 - **WebSocket Support**: Real-time communication using Socket.IO.
 - **Database**: PostgreSQL with Sequelize ORM, managing `Users`, `Dogs`, and `Assignments` tables.
@@ -29,6 +31,7 @@ This is the backend server for the CyDog project, a web application designed to 
 - **Environment Configuration**: Supports `.env` for flexible configuration.
 
 ## Prerequisites
+
 - **Node.js**: Version 18 or higher (used in Docker image `node:18-alpine`).
 - **Docker**: Docker Desktop or Docker CLI installed for containerized deployment.
 - **Docker Compose**: Required for orchestrating the `server` and `postgres` services.
@@ -36,13 +39,13 @@ This is the backend server for the CyDog project, a web application designed to 
 - **NPM**: For installing dependencies if running without Docker.
 
 ## Project Structure
+
 ```
 C:\Users\מתן\Desktop\CyDog-Final-Project\v2\server\
 ├── .env                    # Environment variables
 ├── docker-compose.yml      # Docker Compose configuration
 ├── Dockerfile              # Docker image for the server
 ├── package.json            # Node.js dependencies and scripts
-├── src/
 │   ├── index.js            # Main server entry point
 │   ├── config/
 │   │   ├── db.js           # Sequelize database configuration
@@ -62,6 +65,7 @@ C:\Users\מתן\Desktop\CyDog-Final-Project\v2\server\
 ## Setup
 
 ### Environment Variables
+
 Create a `.env` file in the project root based on the example below:
 
 ```env
@@ -84,6 +88,7 @@ CORS_ORIGIN=http://localhost:3000
   - Add `.env` to `.gitignore` to prevent exposing sensitive data.
 
 ### Installing Dependencies
+
 If running without Docker or modifying the project, install Node.js dependencies:
 
 ```bash
@@ -91,28 +96,35 @@ npm install
 ```
 
 Required packages (should be listed in `package.json`):
+
 - `express`, `cors`, `http`, `swagger-ui-express`, `sequelize`, `pg`, `pg-hstore`, `cookie-parser`, `express-session`, `bcryptjs`, `helmet`, `express-rate-limit`, `dotenv`
 
 ## Running the Application
 
 ### Using Docker Compose
+
 The recommended way to run the application is with Docker Compose, which sets up both the Node.js server and PostgreSQL database.
 
 1. **Stop and Remove Existing Containers**:
+
    ```bash
    docker-compose down -v
    ```
+
    This ensures a clean slate by removing containers and volumes.
 
 2. **Build and Start**:
+
    ```bash
    docker-compose up --build
    ```
+
    - Builds the server image from `Dockerfile`.
    - Starts the `postgres` and `server` services.
    - The server runs on `http://localhost:8080`.
 
 3. **Expected Output**:
+
    - PostgreSQL:
      ```
      postgres_1  | 2025-04-13 ... LOG:  database system is ready to accept connections
@@ -138,9 +150,11 @@ The recommended way to run the application is with Docker Compose, which sets up
    ```
 
 ### Without Docker
+
 To run locally without Docker (not recommended for production):
 
 1. **Start PostgreSQL**:
+
    - Install PostgreSQL locally.
    - Create a database and user:
      ```bash
@@ -150,9 +164,11 @@ To run locally without Docker (not recommended for production):
      ```
 
 2. **Update `.env`**:
+
    - Set `DB_HOST=localhost` instead of `postgres`.
 
 3. **Install Dependencies**:
+
    ```bash
    npm install
    ```
@@ -163,7 +179,9 @@ To run locally without Docker (not recommended for production):
    ```
 
 ## Testing
+
 1. **API Endpoints**:
+
    - Access Swagger documentation at `http://localhost:8080/api-docs`.
    - Test routes using Postman, cURL, or a similar tool:
      ```bash
@@ -173,6 +191,7 @@ To run locally without Docker (not recommended for production):
      ```
 
 2. **Database Verification**:
+
    - Connect to the PostgreSQL container:
      ```bash
      docker exec -it server_postgres_1 psql -U cydog -d cydog_db
@@ -208,6 +227,7 @@ To run locally without Docker (not recommended for production):
    - Test events defined in `src/socket.js`.
 
 ## API Documentation
+
 - **Swagger UI**: Available at `http://localhost:8080/api-docs` when the server is running.
 - **Routes**:
   - `/auth`: Authentication endpoints (register, login, logout, get current user).
@@ -216,7 +236,9 @@ To run locally without Docker (not recommended for production):
 - Refer to `src/swagger.js` for the OpenAPI specification.
 
 ## Database Management
+
 - **Schema**:
+
   - `Users`: Stores user data (`id`, `email`, `password`, `role`, `permissions`).
   - `Dogs`: Stores dog data (`id`, `name`, `breed`, `age`, `type`, `userId`).
   - `Assignments`: Stores assignment data (`id`, `type`, `dogId`, `userId`, `status`).
@@ -226,6 +248,7 @@ To run locally without Docker (not recommended for production):
     - `Assignments.dogId` references `Dogs(id)` with `ON DELETE CASCADE`.
 
 - **Development Sync**:
+
   - The server uses `sequelize.sync({ force: true })` in development to recreate tables on startup. This is controlled by `NODE_ENV=development` in `.env`.
 
 - **Production Recommendation**:
@@ -245,7 +268,9 @@ To run locally without Docker (not recommended for production):
        ```
 
 ## Troubleshooting
+
 - **Database Connection Issues**:
+
   - Ensure `DB_HOST=postgres` in `.env` and `docker-compose.yml`.
   - Check PostgreSQL logs:
     ```bash
@@ -253,6 +278,7 @@ To run locally without Docker (not recommended for production):
     ```
 
 - **Sequelize Errors** (e.g., `relation "Dogs" does not exist`):
+
   - Verify model sync order in `src/index.js` (`User`, `Dog`, `Assignment`).
   - Confirm table names in models (`Users`, `Dogs`, `Assignments`) and foreign key references (`Users` for `userId`, `Dogs` for `dogId`).
   - Clear volumes and restart:
@@ -262,10 +288,12 @@ To run locally without Docker (not recommended for production):
     ```
 
 - **CORS Issues**:
+
   - Ensure `CORS_ORIGIN` matches your frontend URL.
   - Test with the correct frontend port (e.g., `http://localhost:3000`).
 
 - **Dependency Errors**:
+
   - Reinstall dependencies:
     ```bash
     npm install
@@ -278,6 +306,7 @@ To run locally without Docker (not recommended for production):
     ```
 
 ## Contributing
+
 1. Fork the repository.
 2. Create a feature branch:
    ```bash
@@ -294,6 +323,7 @@ To run locally without Docker (not recommended for production):
 5. Open a pull request.
 
 ## License
+
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---

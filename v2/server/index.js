@@ -35,9 +35,9 @@ try {
 const app = express();
 const server = http.createServer(app);
 
-// CORS configuration - Must come before security headers
+// CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000", // Specific origin instead of wildcard
+  origin: ["http://localhost:3000", "https://html.onlineviewer.net"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   credentials: true,
@@ -45,7 +45,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Security headers - Configure to allow cross-origin resources
+// Security headers
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -55,11 +55,11 @@ app.use(
   })
 );
 
-// Create upload directories if they don't exist
+// Create upload directories
 const uploadDir = path.join(__dirname, "public/uploads");
 const dogUploadDir = path.join(__dirname, "public/uploads/dogs");
+const outputDir = path.join(__dirname, "public/output");
 
-// Create directories if they don't exist
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log("Created uploads directory");
@@ -68,12 +68,15 @@ if (!fs.existsSync(dogUploadDir)) {
   fs.mkdirSync(dogUploadDir, { recursive: true });
   console.log("Created dogs upload directory");
 }
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+  console.log("Created output directory");
+}
 
-// Custom middleware for serving dog images with specific CORS headers
+// Serve dog images
 app.use(
   "/uploads/dogs",
   (req, res, next) => {
-    // Match the same origin as in corsOptions
     res.setHeader(
       "Access-Control-Allow-Origin",
       process.env.CORS_ORIGIN || "http://localhost:3000"
@@ -86,8 +89,26 @@ app.use(
   express.static(path.join(__dirname, "public/uploads/dogs"))
 );
 
-// Then serve the general uploads directory
+app.use(
+  "/output",
+  (req, res, next) => {
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      process.env.CORS_ORIGIN || "http://localhost:3000"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "public/output"))
+);
+
+// Serve general uploads
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+
+// Serve HLS stream endpoint
+app.use("/stream", express.static(path.join(__dirname, "public", "output")));
 
 // Body parser
 app.use(express.json({ limit: "1mb" }));
@@ -119,13 +140,13 @@ app.use(session(sessionConfig));
 // Swagger documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// Add request timestamp middleware
+// Request timestamp middleware
 app.use((req, res, next) => {
   req.requestTime = new Date();
   next();
 });
 
-// Add a debug endpoint to check the file
+// Debug endpoint
 app.get("/debug-image/:filename", (req, res) => {
   const filePath = path.join(
     __dirname,
@@ -199,6 +220,9 @@ async function startServer() {
       console.log(
         `Dog images accessible at http://localhost:${PORT}/uploads/dogs/[filename]`
       );
+      console.log(
+        `HLS stream accessible at http://localhost:${PORT}/stream/stream.m3u8`
+      );
     });
   } catch (error) {
     console.error("Failed to start server:", error);
@@ -208,6 +232,7 @@ async function startServer() {
 
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
+  stopFFmpeg();
   server.close(() => {
     console.log("Server closed");
     sequelize.close().then(() => {
