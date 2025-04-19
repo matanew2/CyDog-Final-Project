@@ -91,7 +91,7 @@ export function DogProfilePage({ id }: DogProfilePageProps) {
           {/* Left column - Dog info */}
           <div className="lg:sticky lg:top-20 lg:self-start">
             <Card className="overflow-hidden bg-teal-800/50 text-white border-teal-700">
-              <div className="h-60 w-full overflow-hidden bg-teal-900/50">
+              <div className="h-full w-full overflow-hidden bg-teal-900/50">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.3 }}
