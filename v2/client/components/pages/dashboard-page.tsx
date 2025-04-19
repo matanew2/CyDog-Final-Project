@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getImageUrl, BACKEND_URL } from "@/utils/ImageProcess";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
@@ -223,8 +224,9 @@ export function DashboardPage() {
                     <div className="flex items-center gap-2 w-44 h-8">
                       <Avatar className="h-8 w-8 border border-teal-500">
                         <AvatarImage
-                          src={dog.image || "/placeholder.svg"}
+                          src={getImageUrl(dog.image)}
                           alt={dog.name}
+                          className="object-cover"
                         />
                         <AvatarFallback className="bg-teal-700 dark:bg-teal-800 text-white text-xs">
                           {dog.name[0]}

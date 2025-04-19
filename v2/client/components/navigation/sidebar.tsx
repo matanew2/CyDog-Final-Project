@@ -15,6 +15,7 @@ import {
   Sun,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Logo } from "@/components/ui/logo";
@@ -42,6 +43,7 @@ export function Sidebar() {
   }, []);
 
   const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: Dog, label: "Dog List", href: "/dog-list" },
     { icon: Users, label: "Handlers", href: "/handlers" },
     { icon: ClipboardList, label: "Assignments", href: "/assignments" },
