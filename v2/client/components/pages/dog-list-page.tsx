@@ -124,7 +124,7 @@ export function DogListPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="border-teal-600 text-white hover:bg-teal-700"
+                className="border-teal-600 text-black hover:bg-teal-700"
                 onClick={handleRefresh}
                 disabled={isLoading}
               >
@@ -356,7 +356,7 @@ export function DogListPage() {
                         >
                           <Button
                             variant="outline"
-                            className="w-full border-teal-600 text-white hover:bg-teal-700"
+                            className="w-full border-teal-600 text-black hover:bg-teal-700"
                           >
                             View Profile
                           </Button>

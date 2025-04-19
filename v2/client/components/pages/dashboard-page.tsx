@@ -297,7 +297,7 @@ export function DashboardPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-teal-600 dark:border-teal-700 text-white hover:bg-teal-700 dark:hover:bg-teal-800 text-xs h-7 px-2"
+                    className="border-teal-600 dark:border-teal-700 text-teal-600 dark:text-white hover:bg-teal-700 dark:hover:bg-teal-800 text-xs h-7 px-2"
                     onClick={toggleFullscreen}
                   >
                     <Maximize className="h-3 w-3 mr-1" />

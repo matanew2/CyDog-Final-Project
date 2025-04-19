@@ -149,7 +149,7 @@ export function HandlersPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="border-teal-600 text-white hover:bg-teal-700"
+                className="border-teal-600 text-black hover:bg-teal-700"
                 onClick={handleRefresh}
                 disabled={isLoading}
               >
@@ -386,15 +386,6 @@ export function HandlersPage() {
                               No active assignments
                             </div>
                           )}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            className="flex-1 border-teal-600 text-white hover:bg-teal-700"
-                          >
-                            View Profile
-                          </Button>
                         </div>
                       </CardContent>
                     </Card>
