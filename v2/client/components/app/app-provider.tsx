@@ -13,6 +13,10 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { API, socketService, SocketEvent } from "@/services";
 import { v4 as uuidv4 } from "uuid";
 
+//TODO: Need to implement in the backend - convert RTSP to HLS (ffmpeg command) - send rtsp link and dogid
+// TODO: Need to change in the backend the ffmpeg command to get rtsp stream instead of hardcoded stream in Dockerfile
+// TODO: Need to implement in the backend - dogs will have a hlsUrl field (defined by dogId) that will be used to stream the video
+
 // Types
 export interface Dog {
   id: string;
@@ -59,6 +63,7 @@ interface AppContextType {
   ) => Promise<void>;
   isLoading: boolean;
   refreshData: () => Promise<void>;
+  convertRTSPToHLS: (rtspUrl: string, dogId: string) => Promise<string | void>;
 }
 
 // Create app context
@@ -476,6 +481,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Convert RTSP to HLS (if needed)
+  const convertRTSPToHLS = async (rtspUrl: string, dogId: string) => {
+    // Check if the URL is valid
+    if (!rtspUrl || !isValidUrl(rtspUrl)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please provide a valid RTSP URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await API.assignments.convertRTSPToHLS(rtspUrl, dogId);
+      if (response?.data) {
+        toast({
+          title: "RTSP to HLS conversion",
+          description: `RTSP URL converted to HLS: ${response.data.hlsUrl}`,
+        });
+        return response.data.hlsUrl;
+      } else {
+        toast({
+          title: "Error converting RTSP to HLS",
+          description: "Server returned an invalid response.",
+          variant: "destructive",
+        });
+        throw new Error("API returned no data");
+      }
+    } catch (error) {
+      console.error("Error converting RTSP to HLS:", error);
+      toast({
+        title: "Failed to convert RTSP to HLS",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Current code:
   const activeDogs =
     Array.isArray(dogs) && Array.isArray(assignments)
@@ -505,6 +552,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isLoading,
         refreshData,
         updateAssignmentById,
+        convertRTSPToHLS,
       }}
     >
       {children}

@@ -13,6 +13,5 @@ export const getImageUrl = (imagePath?: string) => {
     ? cleanPath
     : `uploads/dogs/${cleanPath}`;
   const imageUrl = `${BACKEND_URL}/${fullPath}`;
-  console.log("Generated Image URL:", imageUrl);
   return imageUrl;
 };
