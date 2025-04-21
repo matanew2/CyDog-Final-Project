@@ -98,10 +98,19 @@ export const DogsApi = {
 };
 
 export const AssignmentsApi = {
-  convertRTSPToHLS: (rtspUrl: string) =>
-    apiRequest<{ hlsUrl: string }>("/assignments/convert-rtsp-to-hls", {
+  convertRTSPToHLS: (rtspUrl: string, dogId: string) =>
+    apiRequest<{ hlsUrl: string; streamId: string }>(
+      "/assignments/convert-rtsp-to-hls",
+      {
+        method: "POST",
+        data: { rtspUrl, dogId },
+      }
+    ),
+
+  stopStream: (streamId: string) =>
+    apiRequest<void>("/assignments/stop-stream", {
       method: "POST",
-      data: { rtspUrl },
+      data: { streamId },
     }),
 
   getAllAssignments: () =>

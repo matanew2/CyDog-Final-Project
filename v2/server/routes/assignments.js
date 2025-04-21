@@ -246,4 +246,99 @@ router.put("/:id", assignmentsController.updateAssignment);
  */
 router.delete("/:id", assignmentsController.deleteAssignment);
 
+/**
+ * @swagger
+ * /assignments/convert-rtsp-to-hls:
+ *   post:
+ *     tags: [Assignments]
+ *     summary: Convert an RTSP stream to HLS format for a dog
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rtspUrl:
+ *                 type: string
+ *                 description: RTSP URL of the camera feed
+ *                 example: rtsp://username:password@192.168.1.100:554/stream
+ *               dogId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the dog associated with the stream
+ *             required:
+ *               - rtspUrl
+ *               - dogId
+ *     responses:
+ *       200:
+ *         description: RTSP to HLS conversion started successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     dogId:
+ *                       type: string
+ *                       format: uuid
+ *                     hlsUrl:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [processing, completed, failed]
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Dog not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/convert-rtsp-to-hls", assignmentsController.convertRTSPToHLS);
+
+/**
+ * @swagger
+ * /assignments/stop-stream:
+ *   post:
+ *     tags: [Assignments]
+ *     summary: Stop an active HLS stream
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               streamId:
+ *                 type: string
+ *                 description: ID of the stream to stop
+ *             required:
+ *               - streamId
+ *     responses:
+ *       200:
+ *         description: Stream stopped successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/stop-stream", assignmentsController.stopStream);
+
 module.exports = router;

@@ -1,6 +1,7 @@
 const Assignment = require("../models/assignment");
 const Dog = require("../models/dog");
 const User = require("../models/user"); // Fixed capitalization to match convention
+const { startRtspToHlsConversion } = require("../utils/ffmpeg"); // Import the conversion function
 
 /**
  * Get all assignments with associated dog and user data
@@ -92,8 +93,11 @@ exports.getAssignmentById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id || isNaN(id)) {
-      return res.status(400).json({ error: "Invalid assignment ID" });
+    // Validate UUID format instead of using isNaN which is inappropriate for UUIDs
+    const uuidV4Regex =
+      /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
+    if (!id || !uuidV4Regex.test(id)) {
+      return res.status(400).json({ error: "Invalid assignment ID format" });
     }
 
     const assignment = await Assignment.findByPk(id, {
@@ -211,6 +215,98 @@ exports.deleteAssignment = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       error: "Failed to delete assignment",
+      details: error.message,
+    });
+  }
+};
+
+/**
+ * Convert RTSP stream to HLS format
+ * @param {Object} req - Request object containing rtspUrl and dogId
+ * @param {Object} res - Response object
+ */
+exports.convertRTSPToHLS = async (req, res) => {
+  try {
+    const { rtspUrl, dogId } = req.body;
+
+    // Validate required fields
+    if (!rtspUrl || !dogId) {
+      return res
+        .status(400)
+        .json({ error: "RTSP URL and Dog ID are required" });
+    }
+
+    // Validate URL format (basic validation)
+    if (!rtspUrl.startsWith("rtsp://")) {
+      return res.status(400).json({ error: "Invalid RTSP URL format" });
+    }
+
+    // Verify dog existence
+    const dog = await Dog.findByPk(dogId);
+    if (!dog) {
+      return res.status(404).json({ error: "Dog not found" });
+    }
+
+    // Generate a unique identifier for this stream
+    const streamId = `${dogId}_${Date.now()}`;
+
+    // Start the ffmpeg process to convert RTSP to HLS
+    const conversionResult = await startRtspToHlsConversion(rtspUrl, streamId);
+
+    // Store the correct HLS URL in the dog record
+    await dog.update({ hlsUrl: conversionResult.hlsUrl });
+
+    console.log(
+      `Started RTSP to HLS conversion for dog ${dogId} with URL ${rtspUrl}`
+    );
+    console.log(`HLS stream will be available at ${conversionResult.hlsUrl}`);
+
+    // Return the HLS URL to the client
+    res.status(200).json({
+      success: true,
+      message: "RTSP to HLS conversion started",
+      data: {
+        dogId,
+        hlsUrl: conversionResult.hlsUrl, // Use the correct URL
+        streamId,
+        status: conversionResult.status,
+        pid: conversionResult.pid,
+      },
+    });
+  } catch (error) {
+    console.error("Error converting RTSP to HLS:", error);
+    res.status(500).json({
+      error: "Failed to convert RTSP to HLS",
+      details: error.message,
+    });
+  }
+};
+
+/**
+ * Stop an active HLS stream
+ * @param {Object} req - Request object containing streamId
+ * @param {Object} res - Response object
+ */
+exports.stopStream = async (req, res) => {
+  try {
+    const { streamId } = req.body;
+
+    if (!streamId) {
+      return res.status(400).json({ error: "Stream ID is required" });
+    }
+
+    // Stop the FFmpeg process
+    const result = await stopRtspToHlsConversion(streamId);
+
+    res.status(200).json({
+      success: true,
+      message: "Stream stopped successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error stopping stream:", error);
+    res.status(500).json({
+      error: "Failed to stop stream",
       details: error.message,
     });
   }

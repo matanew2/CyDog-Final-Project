@@ -47,19 +47,5 @@ services:
       - /app/node_modules
       - ./public/output:/app/public/output
 
-  ffmpeg:
-    image: jrottenberg/ffmpeg:4.4-ubuntu
-    container_name: ffmpeg
-    environment:
-      - FFMPEG_PATH=/usr/local/bin/ffmpeg
-    volumes:
-      - ./ffmpeg-scripts:/ffmpeg-scripts:delegated
-      - ./public/output:/output:delegated
-    entrypoint: ["/ffmpeg-scripts/start-hls.sh"]
-    networks:
-      - default
-    depends_on:
-      - postgres
-
 volumes:
   postgres_data:

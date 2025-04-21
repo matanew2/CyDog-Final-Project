@@ -13,10 +13,6 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { API, socketService, SocketEvent } from "@/services";
 import { v4 as uuidv4 } from "uuid";
 
-//TODO: Need to implement in the backend - convert RTSP to HLS (ffmpeg command) - send rtsp link and dogid
-// TODO: Need to change in the backend the ffmpeg command to get rtsp stream instead of hardcoded stream in Dockerfile
-// TODO: Need to implement in the backend - dogs will have a hlsUrl field (defined by dogId) that will be used to stream the video
-
 // Types
 export interface Dog {
   id: string;
@@ -63,7 +59,8 @@ interface AppContextType {
   ) => Promise<void>;
   isLoading: boolean;
   refreshData: () => Promise<void>;
-  convertRTSPToHLS: (rtspUrl: string, dogId: string) => Promise<string | void>;
+  convertRTSPToHLS: (rtspUrl: string, dogId: string) => Promise<any>;
+  stopStream: (streamId: string) => Promise<void>;
 }
 
 // Create app context
@@ -495,12 +492,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const response = await API.assignments.convertRTSPToHLS(rtspUrl, dogId);
+      console.log("RESPONSE:", response.data);
       if (response?.data) {
         toast({
           title: "RTSP to HLS conversion",
-          description: `RTSP URL converted to HLS: ${response.data.hlsUrl}`,
+          description: `RTSP URL converted to HLS: ${response.data.data.hlsUrl}`,
         });
-        return response.data.hlsUrl;
+        return response.data.data; // Updated to access hlsUrl correctly
       } else {
         toast({
           title: "Error converting RTSP to HLS",
@@ -520,6 +518,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw error;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Stop stream (if needed)
+  const stopStream = async (streamId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await API.assignments.stopStream(streamId);
+      if (response?.data) {
+        toast({
+          title: "Stream stopped",
+          description: `Stream with ID ${streamId} has been stopped.`,
+        });
+      } else {
+        toast({
+          title: "Error stopping stream",
+          description: "Server returned an invalid response.",
+          variant: "destructive",
+        });
+        throw new Error("API returned no data");
+      }
+    } catch (error) {
+      console.error("Error stopping stream:", error);
+      toast({
+        title: "Failed to stop stream",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // URL validation function missing from app-provider.tsx
+  const isValidUrl = (url: string): boolean => {
+    try {
+      // Check if URL starts with rtsp:// for RTSP streams
+      if (url.startsWith("rtsp://")) {
+        // Basic RTSP URL validation
+        const rtspRegex = /^rtsp:\/\/([^\/]+)(\/[^?]*)?(\?.*)?$/;
+        return rtspRegex.test(url);
+      }
+
+      // For HTTP/HTTPS URLs (like HLS streams)
+      const parsedUrl = new URL(url);
+      return ["http:", "https:"].includes(parsedUrl.protocol);
+    } catch (e) {
+      return false;
     }
   };
 
@@ -553,6 +601,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshData,
         updateAssignmentById,
         convertRTSPToHLS,
+        stopStream,
       }}
     >
       {children}

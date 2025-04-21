@@ -1,3 +1,5 @@
+// Updated Dog model with hlsUrl field (models/dog.js)
+
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
@@ -28,6 +30,11 @@ const Dog = sequelize.define(
     image: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    hlsUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "URL to the HLS stream for this dog",
     },
   },
   {

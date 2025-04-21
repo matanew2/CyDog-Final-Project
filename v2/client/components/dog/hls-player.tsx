@@ -46,64 +46,6 @@ export function HLSPlayer({
     }
   };
 
-  // Test connection to stream - but skip actual validation for development
-  const testStreamConnection = async (url: string) => {
-    console.log("[HLSPlayer] Testing connection to:", url);
-
-    // In development mode or when using localhost, skip the actual validation
-    // This allows testing with HLS.js even if the endpoint returns 404 initially
-    if (url.includes("localhost") || process.env.NODE_ENV === "development") {
-      console.log(
-        "[HLSPlayer] Running in development mode - skipping connection test"
-      );
-      return true;
-    }
-
-    try {
-      const response = await fetch(url, {
-        method: "HEAD",
-        cache: "no-cache",
-        signal: AbortSignal.timeout(10000),
-      });
-
-      console.log(
-        "[HLSPlayer] Connection test result:",
-        response.ok,
-        "Status:",
-        response.status
-      );
-      return response.ok;
-    } catch (error: any) {
-      console.error(
-        "[HLSPlayer] Connection test error:",
-        error.name,
-        error.message
-      );
-      if (error.name === "AbortError") {
-        setDetailedError(
-          "Connection timed out. The stream server might be unreachable."
-        );
-      } else if (
-        error.name === "TypeError" &&
-        error.message.includes("Failed to fetch")
-      ) {
-        setDetailedError(
-          "Network error. CORS might be blocking access or the server is unreachable."
-        );
-      }
-
-      // For development/testing purposes, allow continuing even with errors
-      if (url.includes("localhost") || process.env.NODE_ENV === "development") {
-        console.log(
-          "[HLSPlayer] Allowing connection despite error in development mode"
-        );
-        return true;
-      }
-
-      return false;
-    }
-  };
-
   // Validate HLS URL
   const isValidHlsUrl = (url: string) => {
     if (!url) return false;
@@ -124,29 +66,63 @@ export function HLSPlayer({
     }
   };
 
+  // Test stream connection
+  const testStreamConnection = async (url: string): Promise<boolean> => {
+    try {
+      console.log("[HLSPlayer] Testing stream connection for URL:", url);
+      const response = await fetch(url, {
+        method: "HEAD",
+        cache: "no-store",
+      });
+      if (response.ok) {
+        console.log("[HLSPlayer] Stream connection test successful");
+        return true;
+      } else {
+        console.warn(
+          "[HLSPlayer] Stream connection test failed with status:",
+          response.status
+        );
+        handleStreamError(
+          "Stream not accessible",
+          `HTTP ${response.status}: ${response.statusText}`
+        );
+        return false;
+      }
+    } catch (error: any) {
+      console.error("[HLSPlayer] Stream connection test error:", error);
+      handleStreamError(
+        "Failed to connect to stream",
+        error.message || "Network or server error"
+      );
+      return false;
+    }
+  };
+
   // HLS configuration
   const getHlsConfig = () => {
     const config = {
-      debug: process.env.NODE_ENV === "development", // Enable debugging in development
+      debug: process.env.NODE_ENV === "development",
       enableWorker: true,
-      lowLatencyMode: retryCount < 3,
-      maxBufferLength: 30,
-      maxMaxBufferLength: 60,
+      lowLatencyMode: true, // Enable low latency mode consistently for live streams
+      liveSyncDuration: 10, // Target 10 seconds behind live edge to avoid stalls
+      liveMaxLatencyDuration: 20, // Allow up to 20 seconds latency
+      maxBufferLength: 60, // Increase to 60 seconds (from 30)
+      maxMaxBufferLength: 120, // Increase to 120 seconds (from 60)
       xhrSetup: (xhr: XMLHttpRequest) => {
         xhr.withCredentials = false;
         xhr.timeout = 20000;
       },
       manifestLoadingTimeOut: 15000,
-      manifestLoadingMaxRetry: 6, // Increased from 4
+      manifestLoadingMaxRetry: 6,
       levelLoadingTimeOut: 15000,
-      levelLoadingMaxRetry: 6, // Increased from 4
+      levelLoadingMaxRetry: 6,
       fragLoadingTimeOut: 20000,
-      fragLoadingMaxRetry: 8, // Increased from 6
-      // More lenient error handling for development
+      fragLoadingMaxRetry: 8,
+      startLevel: 0, // Start with lowest quality for faster initial load
       ...(process.env.NODE_ENV === "development" && {
-        enableSoftwareAES: true, // More compatible decryption
-        progressive: true, // Allow progressive loading
-        startFragPrefetch: true, // Prefetch initial segments
+        enableSoftwareAES: true,
+        progressive: true,
+        startFragPrefetch: true,
       }),
     };
     console.log("[HLSPlayer] HLS Config:", config);
@@ -168,56 +144,42 @@ export function HLSPlayer({
 
     console.log("[HLSPlayer] Starting playback");
 
-    // Ensure video is properly set up before playing
     const video = videoRef.current;
-
-    // Configure video element
     video.muted = isMuted;
     video.autoplay = true;
     video.preload = "auto";
-
-    // Reset any previous error states
     video.onerror = null;
 
-    // Setup event handlers for monitoring playback start
     const playbackStartedHandler = () => {
       console.log("[HLSPlayer] Playback started successfully (playing event)");
       setStreamLoaded(true);
       if (onStreamLoaded) {
         onStreamLoaded();
       }
-      // Remove event listener to avoid duplicate calls
       video.removeEventListener("playing", playbackStartedHandler);
     };
 
-    // Listen for successful playback
     video.addEventListener("playing", playbackStartedHandler);
 
-    // Use a promise to handle play() correctly
     try {
       const playPromise = video.play();
-
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             console.log("[HLSPlayer] Playback initiated successfully");
-            // Full success will be handled by the 'playing' event
           })
           .catch((err) => {
             console.error("[HLSPlayer] Error starting playback:", err);
             video.removeEventListener("playing", playbackStartedHandler);
 
-            // Check if this is an autoplay policy error
             if (err.name === "NotAllowedError") {
               console.log("[HLSPlayer] Autoplay blocked by browser policy");
               setErrorMessage("Browser blocked autoplay. Click to play.");
-              // Still consider the stream as loaded, just needs user interaction
               setStreamLoaded(true);
               if (onStreamLoaded) {
                 onStreamLoaded();
               }
             } else {
-              // Try one more time with muted (browsers often allow muted autoplay)
               if (!isMuted) {
                 console.log("[HLSPlayer] Retrying playback with muted audio");
                 video.muted = true;
@@ -234,16 +196,15 @@ export function HLSPlayer({
             }
           });
       } else {
-        // For browsers where play() doesn't return a promise
         console.log("[HLSPlayer] Play initiated (no promise returned)");
       }
     } catch (e) {
       console.error("[HLSPlayer] Exception during play() call:", e);
-      handleStreamError("Playback initialization error", e.message);
+      handleStreamError("Playback initialization error", (e as Error).message);
     }
   };
 
-  // Initialize or destroy HLS player when needed
+  // Initialize or destroy HLS player
   useEffect(() => {
     console.log(
       "[HLSPlayer] Initializing with active:",
@@ -265,11 +226,10 @@ export function HLSPlayer({
     setDetailedError(null);
     setIsStreamReady(false);
 
-    // Give the video element time to render before attempting to use it
     const timer = setTimeout(() => {
       const video = videoRef.current;
       if (!video) {
-        console.error("[HLSPlayer] Video element still not found after delay");
+        console.error("[HLSPlayer] Video element not found");
         handleStreamError(
           "Video player initialization failed",
           "Video element not available"
@@ -279,7 +239,6 @@ export function HLSPlayer({
       }
 
       const initHls = async () => {
-        // Validate URL format
         if (!isValidHlsUrl(streamUrl)) {
           console.error("[HLSPlayer] Invalid URL format:", streamUrl);
           handleStreamError(
@@ -290,11 +249,9 @@ export function HLSPlayer({
           return;
         }
 
-        // Test connection
         console.log("[HLSPlayer] Testing stream connection...");
         const isAccessible = await testStreamConnection(streamUrl);
 
-        // In development mode, proceed even if connection fails
         if (
           !isAccessible &&
           !(
@@ -303,10 +260,6 @@ export function HLSPlayer({
           )
         ) {
           console.error("[HLSPlayer] Stream not accessible:", streamUrl);
-          handleStreamError(
-            "Unable to access stream",
-            "The stream URL is not accessible. This could be due to network issues, CORS restrictions, or the stream server being offline."
-          );
           setIsLoading(false);
           return;
         }
@@ -314,14 +267,10 @@ export function HLSPlayer({
         try {
           console.log("[HLSPlayer] HLS supported:", Hls.isSupported());
           if (Hls.isSupported()) {
-            // Cleanup existing instance
             cleanupHls();
-
-            // Create new instance
             console.log("[HLSPlayer] Creating new HLS instance");
             hlsRef.current = new Hls(getHlsConfig());
 
-            // Setup error handling
             hlsRef.current.on(Hls.Events.ERROR, (_, data) => {
               console.error(
                 "[HLSPlayer] HLS error event:",
@@ -329,17 +278,9 @@ export function HLSPlayer({
                 data.details,
                 data
               );
-
               if (data.fatal) {
-                console.error(
-                  "[HLSPlayer] Fatal HLS error:",
-                  data.type,
-                  data.details
-                );
-
                 let errorMsg = "Stream error";
                 let detailedMsg = "";
-
                 if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR) {
                   errorMsg = "Failed to load stream";
                   detailedMsg = `Cannot load manifest: ${
@@ -369,7 +310,6 @@ export function HLSPlayer({
 
                 handleStreamError(errorMsg, detailedMsg);
 
-                // Try recovery
                 if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                   console.log(
                     "[HLSPlayer] Trying to recover from network error"
@@ -387,40 +327,29 @@ export function HLSPlayer({
               }
             });
 
-            // Handle manifest parsed - stream is ready to play
             hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
               console.log("[HLSPlayer] Manifest parsed successfully");
               setIsLoading(false);
               setIsStreamReady(true);
-
-              // Load first level quality immediately to ensure video can start faster
               if (
                 hlsRef.current &&
                 hlsRef.current.levels &&
                 hlsRef.current.levels.length > 0
               ) {
-                // Start with lowest quality for faster initial load
                 hlsRef.current.currentLevel = 0;
-                console.log(
-                  "[HLSPlayer] Set initial quality level to lowest for faster startup"
-                );
+                console.log("[HLSPlayer] Set initial quality level to lowest");
               }
             });
 
-            // Log key events
             hlsRef.current.on(Hls.Events.MEDIA_ATTACHED, () => {
               console.log("[HLSPlayer] Media attached successfully");
             });
 
-            // First attach media then load source
             console.log("[HLSPlayer] Attaching media and loading source");
             hlsRef.current.attachMedia(video);
             hlsRef.current.loadSource(streamUrl);
           } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            // For Safari which has built-in HLS support
             console.log("[HLSPlayer] Using native HLS support (Safari)");
-
-            // Set up event listeners before changing the source
             video.addEventListener("loadedmetadata", () => {
               console.log("[HLSPlayer] Native HLS metadata loaded");
               setIsLoading(false);
@@ -430,10 +359,8 @@ export function HLSPlayer({
             video.addEventListener("error", () => {
               const videoError = video.error;
               console.error("[HLSPlayer] Native HLS error:", videoError);
-
               let errorMsg = "Error loading the stream";
               let detailedMsg = "";
-
               if (videoError) {
                 switch (videoError.code) {
                   case MediaError.MEDIA_ERR_ABORTED:
@@ -454,11 +381,9 @@ export function HLSPlayer({
                     break;
                 }
               }
-
               handleStreamError(errorMsg, detailedMsg);
             });
 
-            // Set the source after listeners are attached
             video.src = streamUrl;
           } else {
             console.error("[HLSPlayer] HLS not supported in this browser");
@@ -476,7 +401,7 @@ export function HLSPlayer({
       };
 
       initHls();
-    }, 500); // Give DOM time to render
+    }, 500);
 
     return () => {
       console.log("[HLSPlayer] Cleanup on unmount or deps change");
@@ -513,49 +438,37 @@ export function HLSPlayer({
     console.log("[HLSPlayer] Retrying stream, attempt:", newRetryCount);
     setRetryCount(newRetryCount);
 
-    // Try with a test stream if multiple retries failed with custom URL
     let urlToUse = streamUrl;
     if (newRetryCount > 2 && !streamUrl.includes("test-streams.mux.dev")) {
       console.log("[HLSPlayer] Multiple retries failed, trying test stream");
-      urlToUse = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
+      urlToUse =
+        "rtsp://rtspstream:ZrxusdhSSmn5gjgaqY74X@zephyr.rtsp.stream/traffic";
     }
 
-    // Reset states
     setStreamLoaded(false);
     setErrorMessage(null);
     setDetailedError(null);
     setIsLoading(true);
     setIsStreamReady(false);
 
-    // Clean up and reinitialize
     cleanupHls();
 
-    // Add a short delay before reinitializing to ensure clean slate
     setTimeout(() => {
-      // Force component to reinitialize
       const video = videoRef.current;
       if (video && isActive) {
         if (Hls.isSupported()) {
           console.log("[HLSPlayer] Re-initializing HLS with URL:", urlToUse);
-
-          // Create a more permissive config for retries
           const retryConfig = {
             ...getHlsConfig(),
-            // More aggressive retry settings
             manifestLoadingMaxRetry: 8,
             levelLoadingMaxRetry: 8,
             fragLoadingMaxRetry: 10,
-            // More generous timeouts
             manifestLoadingTimeOut: 20000,
             levelLoadingTimeOut: 20000,
             fragLoadingTimeOut: 30000,
-            // Recovery options
             enableSoftwareAES: true,
             progressive: true,
             startFragPrefetch: true,
-            // Less strict error handling
-            recoverMediaError: true,
-            recoverNetworkError: true,
           };
 
           const hls = new Hls(retryConfig);
@@ -565,8 +478,6 @@ export function HLSPlayer({
             console.log("[HLSPlayer] Retry: Manifest parsed successfully");
             setIsLoading(false);
             setIsStreamReady(true);
-
-            // Start with lowest quality for faster initial load
             if (hls.levels && hls.levels.length > 0) {
               hls.currentLevel = 0;
             }
@@ -575,22 +486,19 @@ export function HLSPlayer({
           hls.on(Hls.Events.ERROR, (_, data) => {
             if (data.fatal) {
               console.error("[HLSPlayer] Retry: Fatal error", data);
-
-              // Try automatic recovery for network and media errors
               if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                 console.log(
                   "[HLSPlayer] Attempting to recover from network error"
                 );
                 hls.startLoad();
-                return; // Don't report error to UI yet
+                return;
               } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
                 console.log(
                   "[HLSPlayer] Attempting to recover from media error"
                 );
                 hls.recoverMediaError();
-                return; // Don't report error to UI yet
+                return;
               }
-
               handleStreamError("Stream retry failed", data.details);
             }
           });
@@ -598,7 +506,6 @@ export function HLSPlayer({
           hls.attachMedia(video);
           hls.loadSource(urlToUse);
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          // Native HLS support
           video.src = urlToUse;
           video.addEventListener("loadedmetadata", () => {
             setIsLoading(false);
@@ -606,7 +513,7 @@ export function HLSPlayer({
           });
         }
       }
-    }, 500); // Half-second delay for cleanup
+    }, 500);
   };
 
   const toggleDetailedError = () => {
@@ -615,7 +522,6 @@ export function HLSPlayer({
 
   return (
     <div className="h-full w-full bg-black relative">
-      {/* Video element is always present but only visible when loaded */}
       <video
         ref={videoRef}
         className={`absolute inset-0 h-full w-full object-cover ${
