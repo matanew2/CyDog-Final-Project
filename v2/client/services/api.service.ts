@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import type { User } from "@/components/auth/auth-provider";
 import type { Dog, Assignment } from "@/components/app/app-provider";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.cydog.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Axios instance
 const api = axios.create({
