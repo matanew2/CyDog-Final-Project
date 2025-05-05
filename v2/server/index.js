@@ -37,12 +37,19 @@ const server = http.createServer(app);
 
 // CORS configuration
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://html.onlineviewer.net"],
+  // In production, replace '*' with your frontend URL (e.g., 'https://cy-dog-final-project.vercel.app')
+  origin:
+    process.env.NODE_ENV === "production"
+      ? [process.env.CORS_ORIGIN]
+      : ["http://localhost:3000", "https://cy-dog-final-project.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   exposedHeaders: ["Content-Disposition"],
 };
+
+// Explicitly handle OPTIONS preflight requests
+app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Security headers
@@ -79,7 +86,7 @@ app.use(
   (req, res, next) => {
     res.setHeader(
       "Access-Control-Allow-Origin",
-      process.env.CORS_ORIGIN || "http://localhost:3000"
+      process.env.CORS_ORIGIN || "*"
     );
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET");
@@ -94,7 +101,7 @@ app.use(
   (req, res, next) => {
     res.setHeader(
       "Access-Control-Allow-Origin",
-      process.env.CORS_ORIGIN || "http://localhost:3000"
+      process.env.CORS_ORIGIN || "*"
     );
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET");
@@ -119,18 +126,18 @@ app.use(cookieParser());
 
 // Session configuration
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "secret",
+  secret: process.env.SESSION_SECRET || "secret", // Ensure SESSION_SECRET is set in .env
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production", // Requires HTTPS in production
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use 'none' for cross-origin in production
   },
 };
 
-if (app.get("env") === "production") {
+if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
   sessionConfig.cookie.secure = true;
 }
@@ -159,14 +166,19 @@ app.get("/debug-image/:filename", (req, res) => {
     fileStats: fs.existsSync(filePath) ? fs.statSync(filePath) : null,
     headers: {
       "content-type": "image/jpeg",
-      "access-control-allow-origin":
-        process.env.CORS_ORIGIN || "http://localhost:3000",
+      "access-control-allow-origin": process.env.CORS_ORIGIN || "*",
     },
   });
 });
 
 // Routes
-app.use("/auth", authRoutes);
+app.use("/auth", (req, res, next) => {
+  console.log(`[${req.requestTime}] ${req.method} /auth${req.path}`, {
+    headers: req.headers,
+    session: req.session,
+  });
+  authRoutes(req, res, next);
+});
 app.use("/dogs", dogsRoutes);
 app.use("/assignments", assignmentsRoutes);
 
@@ -177,7 +189,7 @@ app.use((req, res, next) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(`[${new Date()}] Error:`, err.stack);
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
   res.status(statusCode).json({
@@ -197,16 +209,20 @@ async function startServer() {
     await sequelize.authenticate();
     console.log("Database connection established successfully.");
 
+    // Use alter: true in development to avoid dropping tables; remove in production
+    const syncOptions =
+      process.env.NODE_ENV === "development" ? { alter: true } : {};
+
     console.log("Syncing User model...");
-    await User.sync({ force: process.env.NODE_ENV === "development" });
+    await User.sync(syncOptions);
     console.log("User model synced.");
 
     console.log("Syncing Dog model...");
-    await Dog.sync({ force: process.env.NODE_ENV === "development" });
+    await Dog.sync(syncOptions);
     console.log("Dog model synced.");
 
     console.log("Syncing Assignment model...");
-    await Assignment.sync({ force: process.env.NODE_ENV === "development" });
+    await Assignment.sync(syncOptions);
     console.log("Assignment model synced.");
 
     console.log("Database models synchronized.");
